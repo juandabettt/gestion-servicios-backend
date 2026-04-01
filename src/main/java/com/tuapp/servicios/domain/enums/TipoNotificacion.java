@@ -1,0 +1,2 @@
+package com.tuapp.servicios.domain.enums;
+public enum TipoNotificacion { FACTURA_POR_VENCER, PAGO_CONFIRMADO, ANOMALIA_DETECTADA, ANALISIS_LISTO, AUTOPAGO_EJECUTADO, AUTOPAGO_FALLIDO }

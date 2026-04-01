@@ -1,0 +1,154 @@
+spring:
+  application:
+    name: servicios-backend
+  profiles:
+    active: ${APP_ENV:local}
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/servicios_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          time_zone: UTC
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 4
+          min-idle: 1
+
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 15MB
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+    time-zone: UTC
+
+# JWT
+jwt:
+  secret: ${JWT_SECRET:bXlTZWNyZXRLZXlGb3JTZXJ2aWNpb3NQdWJsaWNvc0FwcDIwMjVTZWN1cmVCYXNlNjQ=}
+  access-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:900000}
+  refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
+
+# Field encryption
+encryption:
+  key: ${FIELD_ENCRYPTION_KEY:bXlGaWVsZEVuY3J5cHRpb25LZXkyMDI1QUVTMjU2Qml0c0tleQ==}
+
+# Payment gateway
+payment:
+  gateway:
+    url: ${PAYMENT_GATEWAY_URL:http://localhost:8080/mock-gateway}
+    api-key: ${PAYMENT_GATEWAY_API_KEY:mock-api-key}
+    webhook-secret: ${PAYMENT_GATEWAY_WEBHOOK_SECRET:mock-webhook-secret-2025}
+
+# File storage
+storage:
+  endpoint: ${STORAGE_ENDPOINT:http://localhost:9000}
+  access-key: ${STORAGE_ACCESS_KEY:minioadmin}
+  secret-key: ${STORAGE_SECRET_KEY:minioadmin}
+  bucket-name: ${STORAGE_BUCKET_NAME:facturas-local}
+  region: ${STORAGE_REGION:us-east-1}
+
+# AI Service
+ai:
+  service:
+    api-key: ${AI_SERVICE_API_KEY:mock-ai-key}
+    model: ${AI_SERVICE_MODEL:claude-opus-4-20250514}
+    base-url: https://api.anthropic.com/v1
+
+# Notifications
+notification:
+  sendgrid:
+    api-key: ${SENDGRID_API_KEY:mock-sendgrid-key}
+    from-email: ${EMAIL_FROM:noreply@servicios.com}
+  firebase:
+    credentials-json: ${FIREBASE_CREDENTIALS_JSON:}
+
+# App config
+app:
+  instance-id: ${APP_INSTANCE_ID:instance-1}
+  env: ${APP_ENV:local}
+
+# Resilience4j
+resilience4j:
+  retry:
+    instances:
+      ocrService:
+        max-attempts: 3
+        wait-duration: 2s
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - java.io.IOException
+          - org.springframework.web.client.ResourceAccessException
+      paymentGateway:
+        max-attempts: 2
+        wait-duration: 1s
+  circuitbreaker:
+    instances:
+      ocrService:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+      paymentGateway:
+        sliding-window-size: 10
+        failure-rate-threshold: 30
+        wait-duration-in-open-state: 60s
+        permitted-number-of-calls-in-half-open-state: 3
+  ratelimiter:
+    instances:
+      aiAnalysis:
+        limit-for-period: 10
+        limit-refresh-period: 1s
+        timeout-duration: 0
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Logging
+logging:
+  level:
+    com.tuapp.servicios: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] [%X{traceId}] %-5level %logger{36} - %msg%n"

@@ -1,0 +1,36 @@
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:15-alpine:///servicios_test
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: false
+
+jwt:
+  secret: dGVzdFNlY3JldEtleUZvclVuaXRUZXN0czIwMjVCYXNlNjRFbmNvZGVkU2VjdXJl
+  access-expiration-ms: 900000
+  refresh-expiration-ms: 604800000
+
+encryption:
+  key: dGVzdEVuY3J5cHRpb25LZXlGb3JVbml0VGVzdHMyMDI1QUVTMQ==
+
+payment:
+  gateway:
+    webhook-secret: test-webhook-secret
+
+storage:
+  endpoint: http://localhost:9000
+  access-key: test
+  secret-key: test
+  bucket-name: test-bucket
+  region: us-east-1
+
+logging:
+  level:
+    com.tuapp.servicios: WARN
+    org.springframework.security: WARN

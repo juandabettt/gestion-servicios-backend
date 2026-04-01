@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(BASE=\"C:/Users/juand/OneDrive/Documentos/Proyecto_Servicios_Publicos/servicios-backend\")",
+      "Bash(mkdir -p \"$BASE/src/main/java/com/tuapp/servicios/config\")",
+      "Bash(mkdir -p \"$BASE/src/main/java/com/tuapp/servicios/domain/model\")",
+      "Bash(mkdir -p \"$BASE/src/main/java/com/tuapp/servicios/domain/enums\")",
+      "Bash(mkdir -p \"$BASE/src/main/java/com/tuapp/servicios/domain/repository\")",
+      "Bash(BASE=\"C:/Users/juand/OneDrive/Documentos/Proyecto_Servicios_Publicos/servicios-backend/src/main/java/com/tuapp/servicios\")",
+      "Bash(mkdir -p \"$BASE/application/exception\")",
+      "Bash(mkdir -p \"$BASE/application/service\")",
+      "Bash(mkdir -p \"$BASE/web/advice\")",
+      "Bash(mkdir -p \"$BASE/web/controller\")",
+      "Bash(BASE=\"C:/Users/juand/OneDrive/Documentos/Proyecto_Servicios_Publicos/servicios-backend/src/test/java/com/tuapp/servicios\")",
+      "Bash(mkdir -p \"$BASE/infrastructure/security\")",
+      "Bash(mkdir -p \"$BASE/integration\")"
+    ]
+  }
+}
