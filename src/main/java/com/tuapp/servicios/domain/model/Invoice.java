@@ -31,20 +31,20 @@ public class Invoice extends BaseAuditEntity {
     private Property property;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "proveedor_id", nullable = false)
+    @JoinColumn(name = "proveedor_id", nullable = true)
     private ProviderCompany proveedor;
 
     @Convert(converter = EncryptedStringConverter.class)
-    @Column(name = "numero_referencia", nullable = false, length = 500)
+    @Column(name = "numero_referencia", nullable = true, length = 500)
     private String numeroReferencia;
 
-    @Column(name = "fecha_emision", nullable = false)
+    @Column(name = "fecha_emision", nullable = true)
     private LocalDate fechaEmision;
 
-    @Column(name = "fecha_vencimiento", nullable = false)
+    @Column(name = "fecha_vencimiento", nullable = true)
     private LocalDate fechaVencimiento;
 
-    @Column(name = "monto_total", nullable = false, precision = 19, scale = 4)
+    @Column(name = "monto_total", nullable = true, precision = 19, scale = 4)
     private BigDecimal montoTotal;
 
     @Column(name = "consumo_unidad", precision = 19, scale = 4)

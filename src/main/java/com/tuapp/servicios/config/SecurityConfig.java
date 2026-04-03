@@ -39,27 +39,27 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Endpoints públicos
+                        // Autenticación
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh").permitAll()
-                        // Webhook de pasarela (autenticación por HMAC, no JWT)
+
+                        // Pagos y Webhooks
                         .requestMatchers(HttpMethod.POST, "/api/v1/payments/webhook/gateway").permitAll()
-                        // Swagger UI
+
+                        // Documentación Swagger
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html",
-                                "/v3/api-docs/**", "/api-docs/**").permitAll()
-                        // Actuator
+                                "/v3/api-docs/**", "/api-docs/**")
+                        .permitAll()
+
+                        // Monitoreo
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
-                        // Admin
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        // Test mock gateway (solo local)
                         .requestMatchers("/api/v1/test/**").permitAll()
-                        // Todo lo demás requiere autenticación
-                        .anyRequest().authenticated()
-                )
+
+                        // El resto requiere seguridad
+                        .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

@@ -1,11 +1,13 @@
 spring:
   application:
     name: servicios-backend
+  main:
+    allow-bean-definition-overriding: true
   profiles:
     active: ${APP_ENV:local}
 
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/servicios_db}
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/servicios_db}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver

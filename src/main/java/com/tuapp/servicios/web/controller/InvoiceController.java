@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.tuapp.servicios.domain.repository.UserRepository;
@@ -73,6 +74,11 @@ public class InvoiceController {
     }
 
     private UUID resolveUserId(UserDetails userDetails) {
-        return userRepository.findByEmail(userDetails.getUsername()).orElseThrow().getId();
+        if (userDetails == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Autenticación requerida");
+        }
+        return userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado"))
+                .getId();
     }
 }
