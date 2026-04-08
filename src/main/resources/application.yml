@@ -144,7 +144,7 @@ management:
         include: health,info,metrics
   endpoint:
     health:
-      show-details: when-authorized
+      show-details: always
 
 # Logging
 logging:
@@ -154,3 +154,4 @@ logging:
     org.hibernate.SQL: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] [%X{traceId}] %-5level %logger{36} - %msg%n"
+    
