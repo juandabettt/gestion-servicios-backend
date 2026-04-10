@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
-@Profile("local")
+@Profile({"local", "production"})
 @Slf4j
 public class MockNotificationAdapter implements NotificationPort {
 

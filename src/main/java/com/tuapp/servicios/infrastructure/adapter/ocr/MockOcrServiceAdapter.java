@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Random;
 
 @Component
-@Profile("local")
+@Profile({"local", "production"})
 @Slf4j
 @RequiredArgsConstructor
 public class MockOcrServiceAdapter implements OcrServicePort {

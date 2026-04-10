@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/test/mock-gateway")
 @RequiredArgsConstructor
-@Profile("local")
+@Profile({"local", "production"})
 @Tag(name = "Test - Mock Gateway", description = "Endpoints de prueba del mock de pasarela (solo perfil local)")
 public class MockGatewayTestController {
 

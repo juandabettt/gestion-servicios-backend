@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Component
-@Profile("local")
+@Profile({"local", "production"})
 @Slf4j
 public class MockAiAnalysisAdapter implements AiAnalysisPort {
 
