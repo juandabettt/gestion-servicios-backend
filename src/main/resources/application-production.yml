@@ -4,6 +4,11 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 3
+      minimum-idle: 1
+      connection-timeout: 30000
+      idle-timeout: 600000
   jpa:
     hibernate:
       ddl-auto: validate
@@ -11,17 +16,31 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
   data:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
       password: ${REDIS_PASSWORD}
+      lettuce:
+        pool:
+          max-active: 3
+          max-idle: 2
+          min-idle: 1
   flyway:
     enabled: true
     baseline-on-migrate: true
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration
 
 server:
   port: ${PORT:8080}
+  tomcat:
+    threads:
+      max: 20
+      min-spare: 4
+    max-connections: 100
 
 jwt:
   secret: ${JWT_SECRET}
@@ -53,7 +72,31 @@ app:
   env: ${APP_ENV}
   instance-id: ${APP_INSTANCE_ID}
 
+resilience4j:
+  circuitbreaker:
+    instances:
+      ocrService:
+        sliding-window-size: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+      paymentGateway:
+        sliding-window-size: 5
+        failure-rate-threshold: 30
+        wait-duration-in-open-state: 60s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
 logging:
   level:
-    root: INFO
-    com.tuapp.servicios: INFO 
+    root: WARN
+    com.tuapp.servicios: INFO
+    org.springframework.web: WARN
+    org.hibernate: WARN
+    org.flywaydb: INFO
