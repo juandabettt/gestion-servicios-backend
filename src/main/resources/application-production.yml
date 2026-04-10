@@ -1,0 +1,59 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+server:
+  port: ${PORT:8080}
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS}
+  refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS}
+
+encryption:
+  field-key: ${FIELD_ENCRYPTION_KEY}
+
+payment:
+  gateway:
+    url: ${PAYMENT_GATEWAY_URL}
+    api-key: ${PAYMENT_GATEWAY_API_KEY}
+    webhook-secret: ${PAYMENT_GATEWAY_WEBHOOK_SECRET}
+
+storage:
+  endpoint: ${STORAGE_ENDPOINT}
+  access-key: ${STORAGE_ACCESS_KEY}
+  secret-key: ${STORAGE_SECRET_KEY}
+  bucket-name: ${STORAGE_BUCKET_NAME}
+  region: ${STORAGE_REGION}
+
+ai:
+  service:
+    api-key: ${AI_SERVICE_API_KEY}
+    model: ${AI_SERVICE_MODEL}
+
+app:
+  env: ${APP_ENV}
+  instance-id: ${APP_INSTANCE_ID}
+
+logging:
+  level:
+    root: INFO
+    com.tuapp.servicios: INFO 
