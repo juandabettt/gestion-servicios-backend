@@ -148,6 +148,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Cloudinary -->
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http44</artifactId>
+            <version>1.36.0</version>
+        </dependency>
+
         <!-- AWS SDK v2 (S3 + MinIO compatible) -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>

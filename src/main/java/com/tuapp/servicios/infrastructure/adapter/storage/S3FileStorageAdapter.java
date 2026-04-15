@@ -18,7 +18,7 @@ import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 
 @Component
-@Profile("production")
+@Profile("s3-production")
 @Slf4j
 public class S3FileStorageAdapter implements FileStoragePort {
 
