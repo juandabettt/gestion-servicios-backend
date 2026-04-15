@@ -61,6 +61,26 @@ public class AiInsightsController {
         return ResponseEntity.ok(aiInsightsService.submitFeedback(id, request.getCalificacion(), userId));
     }
 
+    @GetMapping("/predictions")
+    @Operation(summary = "Obtener predicción de próxima factura")
+    public ResponseEntity<AiAnalysisResponse> getPredictions(
+            @RequestParam UUID propertyId,
+            @RequestParam(defaultValue = "ENERGIA") TipoServicio serviceType,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UUID userId = resolveUserId(userDetails);
+        return ResponseEntity.ok(aiInsightsService.getPrediction(propertyId, serviceType, userId));
+    }
+
+    @GetMapping("/benchmark")
+    @Operation(summary = "Obtener comparativa vs hogares similares")
+    public ResponseEntity<AiAnalysisResponse> getBenchmark(
+            @RequestParam UUID propertyId,
+            @RequestParam(defaultValue = "ENERGIA") TipoServicio serviceType,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UUID userId = resolveUserId(userDetails);
+        return ResponseEntity.ok(aiInsightsService.getBenchmark(propertyId, serviceType, userId));
+    }
+
     private UUID resolveUserId(UserDetails userDetails) {
         return userRepository.findByEmail(userDetails.getUsername()).orElseThrow().getId();
     }

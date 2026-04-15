@@ -1,6 +1,7 @@
 package com.tuapp.servicios.domain.repository;
 
 import com.tuapp.servicios.domain.enums.EstadoAnalisis;
+import com.tuapp.servicios.domain.enums.TipoAnalisis;
 import com.tuapp.servicios.domain.enums.TipoServicio;
 import com.tuapp.servicios.domain.model.AiAnalysis;
 import org.springframework.data.domain.Page;
@@ -27,4 +28,10 @@ public interface AiAnalysisRepository extends JpaRepository<AiAnalysis, UUID> {
 
     Optional<AiAnalysis> findFirstByPropertyIdAndTipoServicioAndCreatedAtAfterOrderByCreatedAtDesc(
             UUID propertyId, TipoServicio tipoServicio, LocalDateTime desde);
+
+    Optional<AiAnalysis> findFirstByPropertyIdAndTipoServicioAndTipoAnalisisAndEstadoOrderByCreatedAtDesc(
+            UUID propertyId,
+            TipoServicio tipoServicio,
+            TipoAnalisis tipoAnalisis,
+            EstadoAnalisis estado);
 }

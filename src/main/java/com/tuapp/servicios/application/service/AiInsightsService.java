@@ -71,6 +71,56 @@ public class AiInsightsService {
                 propertyId, EstadoAnalisis.COMPLETADO, pageable).map(aiAnalysisMapper::toResponse);
     }
 
+    @Transactional(readOnly = true)
+    public AiAnalysisResponse getPrediction(UUID propertyId, TipoServicio tipoServicio, UUID userId) {
+        propertyService.validateOwnership(propertyId, userId);
+
+        Optional<AiAnalysis> prediction = aiAnalysisRepository
+            .findFirstByPropertyIdAndTipoServicioAndTipoAnalisisAndEstadoOrderByCreatedAtDesc(
+                propertyId, tipoServicio, TipoAnalisis.PREDICCION, EstadoAnalisis.COMPLETADO);
+
+        if (prediction.isPresent()) {
+            return aiAnalysisMapper.toResponse(prediction.get());
+        }
+
+        AiAnalysis empty = AiAnalysis.builder()
+            .property(propertyRepository.findById(propertyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Propiedad", propertyId)))
+            .tipoAnalisis(TipoAnalisis.PREDICCION)
+            .tipoServicio(tipoServicio)
+            .descripcion("Sin datos suficientes para generar una predicción. " +
+                        "Necesitas al menos 3 facturas históricas.")
+            .estado(EstadoAnalisis.COMPLETADO)
+            .build();
+
+        return aiAnalysisMapper.toResponse(aiAnalysisRepository.save(empty));
+    }
+
+    @Transactional(readOnly = true)
+    public AiAnalysisResponse getBenchmark(UUID propertyId, TipoServicio tipoServicio, UUID userId) {
+        propertyService.validateOwnership(propertyId, userId);
+
+        Optional<AiAnalysis> benchmark = aiAnalysisRepository
+            .findFirstByPropertyIdAndTipoServicioAndTipoAnalisisAndEstadoOrderByCreatedAtDesc(
+                propertyId, tipoServicio, TipoAnalisis.COMPARATIVA, EstadoAnalisis.COMPLETADO);
+
+        if (benchmark.isPresent()) {
+            return aiAnalysisMapper.toResponse(benchmark.get());
+        }
+
+        AiAnalysis empty = AiAnalysis.builder()
+            .property(propertyRepository.findById(propertyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Propiedad", propertyId)))
+            .tipoAnalisis(TipoAnalisis.COMPARATIVA)
+            .tipoServicio(tipoServicio)
+            .descripcion("Sin datos suficientes para comparativa. " +
+                        "Se necesitan al menos 5 hogares en tu zona.")
+            .estado(EstadoAnalisis.COMPLETADO)
+            .build();
+
+        return aiAnalysisMapper.toResponse(aiAnalysisRepository.save(empty));
+    }
+
     @Transactional
     public AiAnalysisResponse submitFeedback(UUID analysisId, Integer calificacion, UUID userId) {
         AiAnalysis analysis = aiAnalysisRepository.findById(analysisId)
