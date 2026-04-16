@@ -73,12 +73,18 @@ public class InvoiceService {
 
     @Transactional
     public Page<InvoiceResponse> listByUser(UUID userId, Pageable pageable, String estado) {
+        log.info("Buscando facturas con estado: '{}' para usuario: '{}'", estado, userId);
         Page<Invoice> invoices;
-        if (estado != null && !estado.isBlank()) {
-            EstadoFactura estadoEnum = EstadoFactura.valueOf(estado.toUpperCase());
-            invoices = invoiceRepository.findByUserIdAndEstado(userId, estadoEnum, pageable);
-        } else {
-            invoices = invoiceRepository.findByUserId(userId, pageable);
+        try {
+            if (estado != null && !estado.isBlank()) {
+                EstadoFactura estadoEnum = EstadoFactura.valueOf(estado.toUpperCase().trim());
+                invoices = invoiceRepository.findByUserIdAndEstado(userId, estadoEnum, pageable);
+            } else {
+                invoices = invoiceRepository.findByUserId(userId, pageable);
+            }
+        } catch (Exception e) {
+            log.error("Error al filtrar facturas por estado '{}': {}", estado, e.getMessage());
+            throw e;
         }
         return invoices.map(i -> enrichWithPresignedUrl(invoiceMapper.toResponse(actualizarEstado(i))));
     }
