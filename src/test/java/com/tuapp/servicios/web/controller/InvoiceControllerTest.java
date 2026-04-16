@@ -118,7 +118,7 @@ class InvoiceControllerTest {
                 .build();
 
         when(userRepository.findByEmail("user@test.com")).thenReturn(Optional.of(user));
-        when(invoiceService.listByUser(eq(userId), any()))
+        when(invoiceService.listByUser(eq(userId), any(), isNull()))
                 .thenReturn(new PageImpl<>(List.of(invoice), PageRequest.of(0, 10), 1));
 
         mockMvc.perform(get("/api/v1/invoices"))
