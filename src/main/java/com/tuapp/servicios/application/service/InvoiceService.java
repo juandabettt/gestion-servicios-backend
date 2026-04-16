@@ -73,17 +73,21 @@ public class InvoiceService {
 
     @Transactional
     public Page<InvoiceResponse> listByUser(UUID userId, Pageable pageable, String estado) {
-        log.info("Buscando facturas con estado: '{}' para usuario: '{}'", estado, userId);
+        log.info("[listByUser] userId={} | estado recibido='{}'", userId, estado);
         Page<Invoice> invoices;
         try {
             if (estado != null && !estado.isBlank()) {
                 EstadoFactura estadoEnum = EstadoFactura.valueOf(estado.toUpperCase().trim());
+                log.info("[listByUser] Aplicando filtro por estado: {}", estadoEnum);
                 invoices = invoiceRepository.findByUserIdAndEstado(userId, estadoEnum, pageable);
+                log.info("[listByUser] Query CON filtro ejecutada — total resultados: {}", invoices.getTotalElements());
             } else {
+                log.info("[listByUser] Sin filtro de estado — devolviendo todas las facturas");
                 invoices = invoiceRepository.findByUserId(userId, pageable);
+                log.info("[listByUser] Query SIN filtro ejecutada — total resultados: {}", invoices.getTotalElements());
             }
         } catch (Exception e) {
-            log.error("Error al filtrar facturas por estado '{}': {}", estado, e.getMessage());
+            log.error("[listByUser] Error al filtrar facturas por estado '{}': {}", estado, e.getMessage());
             throw e;
         }
         return invoices.map(i -> enrichWithPresignedUrl(invoiceMapper.toResponse(actualizarEstado(i))));
@@ -144,6 +148,7 @@ public class InvoiceService {
     private Invoice actualizarEstado(Invoice invoice) {
         EstadoFactura estadoReal = calcularEstado(invoice);
         if (estadoReal != invoice.getEstado()) {
+            log.info("[actualizarEstado] Factura {} cambia estado {} -> {}", invoice.getId(), invoice.getEstado(), estadoReal);
             invoice.setEstado(estadoReal);
             invoiceRepository.save(invoice);
         }
