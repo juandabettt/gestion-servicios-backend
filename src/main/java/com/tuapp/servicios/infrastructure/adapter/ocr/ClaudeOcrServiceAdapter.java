@@ -149,6 +149,11 @@ public class ClaudeOcrServiceAdapter implements OcrServicePort {
         String response = client.post()
                 .bodyValue(requestBody)
                 .retrieve()
+                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                        clientResponse -> clientResponse.bodyToMono(String.class).map(errorBody -> {
+                            log.error("Claude API error {} — body: {}", clientResponse.statusCode(), errorBody);
+                            return new RuntimeException("Claude API error " + clientResponse.statusCode() + ": " + errorBody);
+                        }))
                 .bodyToMono(String.class)
                 .block();
 
