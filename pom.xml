@@ -148,6 +148,12 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- WebFlux (WebClient para llamadas a Anthropic API) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+
         <!-- Cloudinary -->
         <dependency>
             <groupId>com.cloudinary</groupId>

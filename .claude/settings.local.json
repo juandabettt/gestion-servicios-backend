@@ -13,7 +13,8 @@
       "Bash(mkdir -p \"$BASE/web/controller\")",
       "Bash(BASE=\"C:/Users/juand/OneDrive/Documentos/Proyecto_Servicios_Publicos/servicios-backend/src/test/java/com/tuapp/servicios\")",
       "Bash(mkdir -p \"$BASE/infrastructure/security\")",
-      "Bash(mkdir -p \"$BASE/integration\")"
+      "Bash(mkdir -p \"$BASE/integration\")",
+      "Bash(./mvnw compile *)"
     ]
   }
 }
