@@ -140,6 +140,12 @@ public class ClaudeOcrServiceAdapter implements OcrServicePort {
                 )
         );
 
+        try {
+            log.info("Claude API request body: {}", objectMapper.writeValueAsString(requestBody));
+        } catch (Exception e) {
+            log.warn("No se pudo serializar el request body para log: {}", e.getMessage());
+        }
+
         String response = client.post()
                 .bodyValue(requestBody)
                 .retrieve()
