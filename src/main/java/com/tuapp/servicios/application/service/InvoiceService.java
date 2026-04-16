@@ -83,6 +83,14 @@ public class InvoiceService {
     }
 
     @Transactional
+    public void deleteInvoice(UUID invoiceId, UUID userId) {
+        Invoice invoice = ownershipValidator.validateAndGet(invoiceId, userId);
+        invoice.softDelete();
+        invoiceRepository.save(invoice);
+        log.info("Factura {} eliminada (soft delete) por usuario {}", invoiceId, userId);
+    }
+
+    @Transactional
     public InvoiceResponse correctOcrData(UUID invoiceId, CorrectInvoiceRequest request, UUID userId) {
         Invoice invoice = ownershipValidator.validateAndGet(invoiceId, userId);
         if (request.getNumeroReferencia() != null) invoice.setNumeroReferencia(request.getNumeroReferencia());

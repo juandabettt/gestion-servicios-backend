@@ -63,6 +63,17 @@ public class InvoiceController {
         return ResponseEntity.ok(invoiceService.getById(id, userId));
     }
 
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Eliminar factura (soft delete)")
+    @ApiResponse(responseCode = "204", description = "Factura eliminada")
+    public ResponseEntity<Void> delete(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UUID userId = resolveUserId(userDetails);
+        invoiceService.deleteInvoice(id, userId);
+        return ResponseEntity.noContent().build();
+    }
+
     @PutMapping("/{id}/correct")
     @Operation(summary = "Corregir datos extraídos por OCR manualmente")
     public ResponseEntity<InvoiceResponse> correct(
