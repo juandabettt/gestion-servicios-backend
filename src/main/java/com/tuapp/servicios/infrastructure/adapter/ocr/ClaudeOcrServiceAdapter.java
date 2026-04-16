@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
@@ -66,6 +67,12 @@ public class ClaudeOcrServiceAdapter implements OcrServicePort {
 
     @Override
     public OcrExtractionResult extractInvoiceData(byte[] imageBytes, String mimeType) {
+        if ("url".equals(mimeType)) {
+            String imageUrl = new String(imageBytes, StandardCharsets.UTF_8);
+            log.info("Iniciando extracción OCR con Claude via URL pública");
+            return extractFromUrl(imageUrl);
+        }
+
         log.info("Iniciando extracción OCR con Claude para imagen de {} bytes", imageBytes.length);
 
         if (imageBytes == null || imageBytes.length == 0) {
@@ -76,49 +83,70 @@ public class ClaudeOcrServiceAdapter implements OcrServicePort {
         try {
             String base64Image = Base64.getEncoder().encodeToString(imageBytes);
 
-            WebClient client = WebClient.builder()
-                    .baseUrl(apiUrl)
-                    .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .defaultHeader("x-api-key", apiKey)
-                    .defaultHeader("anthropic-version", "2023-06-01")
-                    .build();
-
-            Map<String, Object> requestBody = Map.of(
-                    "model", model,
-                    "max_tokens", maxTokens,
-                    "messages", List.of(
-                            Map.of(
-                                    "role", "user",
-                                    "content", List.of(
-                                            Map.of(
-                                                    "type", "image",
-                                                    "source", Map.of(
-                                                            "type", "base64",
-                                                            "media_type", mimeType,
-                                                            "data", base64Image
-                                                    )
-                                            ),
-                                            Map.of(
-                                                    "type", "text",
-                                                    "text", PROMPT
-                                            )
-                                    )
-                            )
-                    )
+            Map<String, Object> imageSource = Map.of(
+                    "type", "base64",
+                    "media_type", mimeType,
+                    "data", base64Image
             );
 
-            String response = client.post()
-                    .bodyValue(requestBody)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
-
-            return parseClaudeResponse(response);
+            return callClaude(imageSource);
 
         } catch (Exception e) {
             log.error("Error al llamar a Claude API: {}", e.getMessage(), e);
             return emptyResult("Error comunicación con Claude: " + e.getMessage());
         }
+    }
+
+    private OcrExtractionResult extractFromUrl(String imageUrl) {
+        try {
+            Map<String, Object> imageSource = Map.of(
+                    "type", "url",
+                    "url", imageUrl
+            );
+
+            return callClaude(imageSource);
+
+        } catch (Exception e) {
+            log.error("Error al llamar a Claude API con URL: {}", e.getMessage(), e);
+            return emptyResult("Error comunicación con Claude: " + e.getMessage());
+        }
+    }
+
+    private OcrExtractionResult callClaude(Map<String, Object> imageSource) {
+        WebClient client = WebClient.builder()
+                .baseUrl(apiUrl)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .defaultHeader("x-api-key", apiKey)
+                .defaultHeader("anthropic-version", "2023-06-01")
+                .build();
+
+        Map<String, Object> requestBody = Map.of(
+                "model", model,
+                "max_tokens", maxTokens,
+                "messages", List.of(
+                        Map.of(
+                                "role", "user",
+                                "content", List.of(
+                                        Map.of(
+                                                "type", "image",
+                                                "source", imageSource
+                                        ),
+                                        Map.of(
+                                                "type", "text",
+                                                "text", PROMPT
+                                        )
+                                )
+                        )
+                )
+        );
+
+        String response = client.post()
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+
+        return parseClaudeResponse(response);
     }
 
     private OcrExtractionResult parseClaudeResponse(String response) {

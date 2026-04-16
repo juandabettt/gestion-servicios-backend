@@ -11,9 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.client.WebClient;
-
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
@@ -39,10 +38,10 @@ public class OcrJobHandler {
 
         log.info("Procesando OCR para factura");
 
-        byte[] imageBytes = downloadImageBytes(objectKey);
-        String mimeType = detectMimeType(objectKey);
+        String imageUrl = fileStoragePort.generatePresignedUrl(objectKey, Duration.ofMinutes(15));
+        log.info("URL de imagen obtenida para OCR");
 
-        OcrExtractionResult result = ocrServicePort.extractInvoiceData(imageBytes, mimeType);
+        OcrExtractionResult result = ocrServicePort.extractInvoiceData(imageUrl.getBytes(StandardCharsets.UTF_8), "url");
 
         if (result.isExitoso()) {
             boolean confianzaBaja = result.getConfianza() == null
@@ -70,32 +69,5 @@ public class OcrJobHandler {
         }
 
         invoiceRepository.save(invoice);
-    }
-
-    private byte[] downloadImageBytes(String objectKey) {
-        try {
-            String imageUrl = fileStoragePort.generatePresignedUrl(objectKey, Duration.ofMinutes(5));
-            byte[] bytes = WebClient.create()
-                    .get()
-                    .uri(imageUrl)
-                    .retrieve()
-                    .bodyToMono(byte[].class)
-                    .block();
-            if (bytes != null && bytes.length > 0) {
-                log.info("Imagen descargada: {} bytes", bytes.length);
-                return bytes;
-            }
-        } catch (Exception e) {
-            log.error("Error descargando imagen del storage: {}", e.getMessage());
-        }
-        return new byte[0];
-    }
-
-    private String detectMimeType(String objectKey) {
-        String lower = objectKey.toLowerCase();
-        if (lower.endsWith(".png")) return "image/png";
-        if (lower.endsWith(".webp")) return "image/webp";
-        if (lower.endsWith(".gif")) return "image/gif";
-        return "image/jpeg";
     }
 }
