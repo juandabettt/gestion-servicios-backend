@@ -46,12 +46,13 @@ public class InvoiceController {
     }
 
     @GetMapping
-    @Operation(summary = "Listar facturas del usuario (paginadas)")
+    @Operation(summary = "Listar facturas del usuario (paginadas), con filtro opcional por estado")
     public ResponseEntity<Page<InvoiceResponse>> list(
             @PageableDefault(size = 10, sort = "createdAt") Pageable pageable,
+            @RequestParam(required = false) String estado,
             @AuthenticationPrincipal UserDetails userDetails) {
         UUID userId = resolveUserId(userDetails);
-        return ResponseEntity.ok(invoiceService.listByUser(userId, pageable));
+        return ResponseEntity.ok(invoiceService.listByUser(userId, pageable, estado));
     }
 
     @GetMapping("/{id}")

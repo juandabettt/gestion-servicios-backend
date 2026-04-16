@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -70,16 +71,22 @@ public class InvoiceService {
                 .build();
     }
 
-    @Transactional(readOnly = true)
-    public Page<InvoiceResponse> listByUser(UUID userId, Pageable pageable) {
-        return invoiceRepository.findByUserId(userId, pageable)
-                .map(i -> enrichWithPresignedUrl(invoiceMapper.toResponse(i)));
+    @Transactional
+    public Page<InvoiceResponse> listByUser(UUID userId, Pageable pageable, String estado) {
+        Page<Invoice> invoices;
+        if (estado != null && !estado.isBlank()) {
+            EstadoFactura estadoEnum = EstadoFactura.valueOf(estado.toUpperCase());
+            invoices = invoiceRepository.findByUserIdAndEstado(userId, estadoEnum, pageable);
+        } else {
+            invoices = invoiceRepository.findByUserId(userId, pageable);
+        }
+        return invoices.map(i -> enrichWithPresignedUrl(invoiceMapper.toResponse(actualizarEstado(i))));
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public InvoiceResponse getById(UUID invoiceId, UUID userId) {
         Invoice invoice = ownershipValidator.validateAndGet(invoiceId, userId);
-        return enrichWithPresignedUrl(invoiceMapper.toResponse(invoice));
+        return enrichWithPresignedUrl(invoiceMapper.toResponse(actualizarEstado(invoice)));
     }
 
     @Transactional
@@ -105,6 +112,36 @@ public class InvoiceService {
             invoice.setEstado(EstadoFactura.PENDIENTE);
         }
         return enrichWithPresignedUrl(invoiceMapper.toResponse(invoiceRepository.save(invoice)));
+    }
+
+    private EstadoFactura calcularEstado(Invoice invoice) {
+        EstadoFactura estadoActual = invoice.getEstado();
+        // No recalcular estados de proceso interno
+        if (estadoActual == EstadoFactura.PROCESANDO_OCR
+                || estadoActual == EstadoFactura.PROCESANDO_PAGO
+                || estadoActual == EstadoFactura.ERROR_OCR
+                || estadoActual == EstadoFactura.PAGADA) {
+            return estadoActual;
+        }
+        // Si la fecha de vencimiento ya pasó y no está pagada, está VENCIDA
+        if (invoice.getFechaVencimiento() != null
+                && invoice.getFechaVencimiento().isBefore(LocalDate.now())) {
+            return EstadoFactura.VENCIDA;
+        }
+        // Si tiene fecha de vencimiento futura, está PENDIENTE
+        if (invoice.getFechaVencimiento() != null) {
+            return EstadoFactura.PENDIENTE;
+        }
+        return estadoActual;
+    }
+
+    private Invoice actualizarEstado(Invoice invoice) {
+        EstadoFactura estadoReal = calcularEstado(invoice);
+        if (estadoReal != invoice.getEstado()) {
+            invoice.setEstado(estadoReal);
+            invoiceRepository.save(invoice);
+        }
+        return invoice;
     }
 
     private InvoiceResponse enrichWithPresignedUrl(InvoiceResponse response) {
