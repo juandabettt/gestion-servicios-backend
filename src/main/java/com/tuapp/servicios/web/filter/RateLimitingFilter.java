@@ -64,7 +64,7 @@ public class RateLimitingFilter implements Filter {
         } else if (path.contains("/auth/register")) {
             limit = Bandwidth.classic(3, Refill.intervally(3, Duration.ofHours(1)));
         } else if (path.contains("/invoices/upload")) {
-            limit = Bandwidth.classic(10, Refill.intervally(10, Duration.ofHours(1)));
+            limit = Bandwidth.classic(50, Refill.intervally(50, Duration.ofHours(1)));
         } else if (path.contains("/ai-insights/analyze")) {
             limit = Bandwidth.classic(3, Refill.intervally(3, Duration.ofDays(1)));
         } else {
