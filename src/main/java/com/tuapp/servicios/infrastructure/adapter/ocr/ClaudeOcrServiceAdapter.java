@@ -9,8 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.math.BigDecimal;
@@ -136,13 +139,18 @@ public class ClaudeOcrServiceAdapter implements OcrServicePort {
 
     private byte[] downloadImageBytes(String imageUrl) {
         try {
-            WebClient downloadClient = WebClient.builder().build();
-
-            return downloadClient.get()
-                    .uri(imageUrl)
-                    .retrieve()
-                    .bodyToMono(byte[].class)
-                    .block();
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<byte[]> response = restTemplate.exchange(
+                    imageUrl,
+                    HttpMethod.GET,
+                    null,
+                    byte[].class
+            );
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return response.getBody();
+            }
+            log.error("Respuesta inesperada al descargar imagen: {}", response.getStatusCode());
+            return null;
         } catch (Exception e) {
             log.error("Error descargando imagen desde URL: {}", e.getMessage());
             return null;

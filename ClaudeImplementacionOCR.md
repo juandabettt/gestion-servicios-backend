@@ -1,51 +1,69 @@
-Necesito corregir un bug en InvoiceService.java. El método upload() de 
-CloudinaryFileStorageAdapter devuelve la URL pública real de Cloudinary, 
-pero InvoiceService ignora ese valor y guarda el objectKey original, 
-causando un 404 al intentar descargar la imagen después.
+Necesito corregir el método downloadImageBytes en ClaudeOcrServiceAdapter.java.
 
-## CAMBIO ÚNICO — InvoiceService.java
+El error actual es:
+  "Error descargando imagen desde URL: 200 OK from GET https://res.cloudinary.com/..."
 
-Archivo: src/main/java/com/tuapp/servicios/application/service/InvoiceService.java
+La respuesta HTTP es 200 OK (la imagen existe) pero WebClient falla al 
+convertir la respuesta a byte[]. Necesito reemplazar el método con una 
+implementación más robusta usando RestTemplate en lugar de WebClient.
 
-Dentro del método uploadInvoice(), busca este bloque exacto:
+## CAMBIO ÚNICO — ClaudeOcrServiceAdapter.java
 
-    String objectKey = buildObjectKey(userId, propertyId, file.getOriginalFilename());
-    try {
-        fileStoragePort.upload(objectKey, file.getBytes(), file.getContentType());
-    } catch (Exception e) {
-        throw new BusinessException("Error al subir el archivo", HttpStatus.INTERNAL_SERVER_ERROR);
+Archivo: src/main/java/com/tuapp/servicios/infrastructure/adapter/ocr/ClaudeOcrServiceAdapter.java
+
+### Paso 1 — Reemplaza el método downloadImageBytes completo
+
+Busca este método exacto:
+
+    private byte[] downloadImageBytes(String imageUrl) {
+        try {
+            WebClient downloadClient = WebClient.builder().build();
+
+            return downloadClient.get()
+                    .uri(imageUrl)
+                    .retrieve()
+                    .bodyToMono(byte[].class)
+                    .block();
+        } catch (Exception e) {
+            log.error("Error descargando imagen desde URL: {}", e.getMessage());
+            return null;
+        }
     }
-    Invoice invoice = Invoice.builder()
-            .property(property)
-            .estado(EstadoFactura.PROCESANDO_OCR)
-            .urlFotoFactura(objectKey)
-            .build();
-    invoice = invoiceRepository.save(invoice);
-    jobQueueService.enqueue(TipoJob.OCR_FACTURA, Map.of(
-            "invoiceId", invoice.getId().toString(),
-            "objectKey", objectKey));
 
 Reemplázalo por esto:
 
-    String objectKey = buildObjectKey(userId, propertyId, file.getOriginalFilename());
-    String storageUrl;
-    try {
-        storageUrl = fileStoragePort.upload(objectKey, file.getBytes(), file.getContentType());
-    } catch (Exception e) {
-        throw new BusinessException("Error al subir el archivo", HttpStatus.INTERNAL_SERVER_ERROR);
+    private byte[] downloadImageBytes(String imageUrl) {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<byte[]> response = restTemplate.exchange(
+                    imageUrl,
+                    HttpMethod.GET,
+                    null,
+                    byte[].class
+            );
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return response.getBody();
+            }
+            log.error("Respuesta inesperada al descargar imagen: {}", response.getStatusCode());
+            return null;
+        } catch (Exception e) {
+            log.error("Error descargando imagen desde URL: {}", e.getMessage());
+            return null;
+        }
     }
-    Invoice invoice = Invoice.builder()
-            .property(property)
-            .estado(EstadoFactura.PROCESANDO_OCR)
-            .urlFotoFactura(storageUrl)
-            .build();
-    invoice = invoiceRepository.save(invoice);
-    jobQueueService.enqueue(TipoJob.OCR_FACTURA, Map.of(
-            "invoiceId", invoice.getId().toString(),
-            "objectKey", storageUrl));
+
+### Paso 2 — Agrega los imports necesarios
+
+Verifica que estos imports existen en la parte superior del archivo.
+Si alguno falta, agrégalo. No dupliques los que ya existen:
+
+    import org.springframework.http.HttpMethod;
+    import org.springframework.http.ResponseEntity;
+    import org.springframework.web.client.RestTemplate;
 
 ## RESTRICCIONES
-- Modifica SOLO el archivo InvoiceService.java
-- SOLO cambia el bloque indicado dentro de uploadInvoice()
-- No toques ningún otro método ni archivo
+- Modifica SOLO ClaudeOcrServiceAdapter.java
+- SOLO reemplaza el método downloadImageBytes
+- No toques ningún otro método
+- No modifiques extractFromUrl ni callClaude
 - Confirma qué líneas cambiaste al terminar
