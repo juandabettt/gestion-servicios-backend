@@ -1,0 +1,100 @@
+{
+  "port": 4545,
+  "protocol": "http",
+  "name": "Payment Gateway Simulator",
+  "stubs": [
+    {
+      "predicates": [
+        {
+          "matches": {
+            "body": {
+              "amount": "\\.01$"
+            }
+          }
+        }
+      ],
+      "responses": [
+        {
+          "is": {
+            "statusCode": 400,
+            "headers": { "Content-Type": "application/json" },
+            "body": "{\"status\":\"REJECTED\",\"reason\":\"INSUFFICIENT_FUNDS\"}"
+          }
+        }
+      ]
+    },
+    {
+      "predicates": [
+        {
+          "matches": {
+            "body": {
+              "amount": "\\.02$"
+            }
+          }
+        }
+      ],
+      "responses": [
+        {
+          "is": {
+            "statusCode": 504,
+            "headers": { "Content-Type": "application/json" },
+            "body": "{\"status\":\"TIMEOUT\",\"reason\":\"GATEWAY_TIMEOUT\"}"
+          },
+          "behaviors": [{ "wait": 5000 }]
+        }
+      ]
+    },
+    {
+      "predicates": [
+        {
+          "matches": {
+            "body": {
+              "amount": "\\.03$"
+            }
+          }
+        }
+      ],
+      "responses": [
+        {
+          "is": {
+            "statusCode": 403,
+            "headers": { "Content-Type": "application/json" },
+            "body": "{\"status\":\"BLOCKED\",\"reason\":\"FRAUD_ALERT\"}"
+          }
+        }
+      ]
+    },
+    {
+      "predicates": [
+        {
+          "matches": {
+            "body": {
+              "amount": "\\.04$"
+            }
+          }
+        }
+      ],
+      "responses": [
+        {
+          "is": {
+            "statusCode": 502,
+            "headers": { "Content-Type": "application/json" },
+            "body": "{\"status\":\"ERROR\",\"reason\":\"UPSTREAM_BANK_FAILURE\"}"
+          }
+        }
+      ]
+    },
+    {
+      "predicates": [],
+      "responses": [
+        {
+          "is": {
+            "statusCode": 200,
+            "headers": { "Content-Type": "application/json" },
+            "body": "{\"status\":\"APPROVED\",\"transactionId\":\"GW-MB-<%- Math.random().toString(36).substring(2,10).toUpperCase() %>\",\"pseUrl\":null}"
+          }
+        }
+      ]
+    }
+  ]
+}

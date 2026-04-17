@@ -21,7 +21,8 @@
       "Bash(cmd.exe /c \"mvn compile 2>&1\")",
       "Bash(cmd.exe /c \"cd C:\\\\\\\\Users\\\\\\\\samue\\\\\\\\Desktop\\\\\\\\ServiciosYa && mvn compile 2>&1\")",
       "Bash(powershell.exe -Command \"cd 'C:\\\\\\\\Users\\\\\\\\samue\\\\\\\\Desktop\\\\\\\\ServiciosYa'; mvn compile 2>&1\")",
-      "Bash(powershell.exe *)"
+      "Bash(powershell.exe *)",
+      "Bash(xargs wc *)"
     ]
   }
 }

@@ -47,6 +47,17 @@ services:
     command: server /data --console-address ":9001"
     restart: unless-stopped
 
+  mountebank:
+    image: bbyars/mountebank:2.9.1
+    container_name: servicios-mountebank
+    ports:
+      - "2525:2525"
+      - "4545:4545"
+    volumes:
+      - ./mountebank:/mountebank
+    command: start --configfile /mountebank/imposters.ejs --allowInjection
+    restart: unless-stopped
+
 volumes:
   postgres-data:
   redis-data:
