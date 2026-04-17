@@ -99,16 +99,53 @@ public class ClaudeOcrServiceAdapter implements OcrServicePort {
 
     private OcrExtractionResult extractFromUrl(String imageUrl) {
         try {
+            log.info("Descargando imagen desde URL para convertir a base64");
+
+            byte[] imageBytes = downloadImageBytes(imageUrl);
+
+            if (imageBytes == null || imageBytes.length == 0) {
+                log.error("No se pudieron descargar los bytes de la imagen desde Cloudinary");
+                return emptyResult("No se pudo descargar la imagen desde Cloudinary");
+            }
+
+            log.info("Imagen descargada exitosamente: {} bytes. Enviando a Claude como base64.",
+                     imageBytes.length);
+
+            String mimeType = "image/jpeg";
+            if (imageUrl.toLowerCase().contains(".png")) {
+                mimeType = "image/png";
+            } else if (imageUrl.toLowerCase().contains(".webp")) {
+                mimeType = "image/webp";
+            }
+
+            String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+
             Map<String, Object> imageSource = Map.of(
-                    "type", "url",
-                    "url", imageUrl
+                    "type", "base64",
+                    "media_type", mimeType,
+                    "data", base64Image
             );
 
             return callClaude(imageSource);
 
         } catch (Exception e) {
-            log.error("Error al llamar a Claude API con URL: {}", e.getMessage(), e);
-            return emptyResult("Error comunicación con Claude: " + e.getMessage());
+            log.error("Error al procesar imagen desde URL: {}", e.getMessage(), e);
+            return emptyResult("Error procesando imagen: " + e.getMessage());
+        }
+    }
+
+    private byte[] downloadImageBytes(String imageUrl) {
+        try {
+            WebClient downloadClient = WebClient.builder().build();
+
+            return downloadClient.get()
+                    .uri(imageUrl)
+                    .retrieve()
+                    .bodyToMono(byte[].class)
+                    .block();
+        } catch (Exception e) {
+            log.error("Error descargando imagen desde URL: {}", e.getMessage());
+            return null;
         }
     }
 
