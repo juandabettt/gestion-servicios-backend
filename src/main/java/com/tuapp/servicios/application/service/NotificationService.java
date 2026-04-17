@@ -2,7 +2,6 @@ package com.tuapp.servicios.application.service;
 
 import com.tuapp.servicios.application.dto.response.NotificationResponse;
 import com.tuapp.servicios.application.exception.ResourceNotFoundException;
-import com.tuapp.servicios.application.exception.UnauthorizedAccessException;
 import com.tuapp.servicios.application.mapper.NotificationMapper;
 import com.tuapp.servicios.application.port.NotificationPort;
 import com.tuapp.servicios.application.port.dto.EmailNotificationRequest;
@@ -11,6 +10,7 @@ import com.tuapp.servicios.domain.enums.EstadoNotificacion;
 import com.tuapp.servicios.domain.enums.TipoNotificacion;
 import com.tuapp.servicios.domain.model.*;
 import com.tuapp.servicios.domain.repository.NotificationLogRepository;
+import com.tuapp.servicios.domain.repository.NotificationRepository;
 import com.tuapp.servicios.domain.repository.UserPreferencesRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +28,7 @@ import java.util.UUID;
 public class NotificationService {
 
     private final NotificationLogRepository notificationLogRepository;
+    private final NotificationRepository notificationRepository;
     private final UserPreferencesRepository preferencesRepository;
     private final NotificationPort notificationPort;
     private final NotificationMapper notificationMapper;
@@ -81,20 +82,28 @@ public class NotificationService {
     }
 
     @Transactional(readOnly = true)
-    public Page<NotificationResponse> listByUser(UUID userId, Pageable pageable) {
-        return notificationLogRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
-                .map(notificationMapper::toResponse);
+    public Page<NotificationResponse> getByUsuario(UUID userId, boolean soloNoLeidas, Pageable pageable) {
+        Page<Notification> page = soloNoLeidas
+            ? notificationRepository.findByUsuarioIdAndLeidaFalseOrderByCreatedAtDesc(userId, pageable)
+            : notificationRepository.findByUsuarioIdOrderByCreatedAtDesc(userId, pageable);
+        return page.map(notificationMapper::toResponse);
     }
 
     @Transactional
-    public void markAsRead(UUID notificationId, UUID userId) {
-        NotificationLog notification = notificationLogRepository.findById(notificationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Notificación", notificationId));
-        if (!notification.getUser().getId().equals(userId)) {
-            throw new UnauthorizedAccessException("No tienes acceso a esta notificación");
-        }
-        notification.setEstado(EstadoNotificacion.ENVIADA);
-        notificationLogRepository.save(notification);
+    public void marcarLeida(UUID notificationId) {
+        Notification notif = notificationRepository.findById(notificationId)
+            .orElseThrow(() -> new ResourceNotFoundException("Notificación", notificationId));
+        notif.setLeida(true);
+        notificationRepository.save(notif);
+    }
+
+    @Transactional
+    public void marcarTodasLeidas(UUID userId) {
+        notificationRepository.findByUsuarioIdAndLeidaFalse(userId)
+            .forEach(n -> {
+                n.setLeida(true);
+                notificationRepository.save(n);
+            });
     }
 
     private NotificationLog createAndSave(User user, TipoNotificacion tipo, String asunto,

@@ -14,7 +14,14 @@
       "Bash(BASE=\"C:/Users/juand/OneDrive/Documentos/Proyecto_Servicios_Publicos/servicios-backend/src/test/java/com/tuapp/servicios\")",
       "Bash(mkdir -p \"$BASE/infrastructure/security\")",
       "Bash(mkdir -p \"$BASE/integration\")",
-      "Bash(./mvnw compile *)"
+      "Bash(./mvnw compile *)",
+      "Bash(dir \"C:\\\\Users\\\\samue\\\\Desktop\\\\ServiciosYa\\\\src\")",
+      "Bash(mvn compile *)",
+      "Bash(cmd.exe /c \"mvn compile -q 2>&1\")",
+      "Bash(cmd.exe /c \"mvn compile 2>&1\")",
+      "Bash(cmd.exe /c \"cd C:\\\\\\\\Users\\\\\\\\samue\\\\\\\\Desktop\\\\\\\\ServiciosYa && mvn compile 2>&1\")",
+      "Bash(powershell.exe -Command \"cd 'C:\\\\\\\\Users\\\\\\\\samue\\\\\\\\Desktop\\\\\\\\ServiciosYa'; mvn compile 2>&1\")",
+      "Bash(powershell.exe *)"
     ]
   }
 }

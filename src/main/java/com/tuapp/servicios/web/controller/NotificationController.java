@@ -10,14 +10,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import com.tuapp.servicios.domain.repository.UserRepository;
+
 import java.util.UUID;
 
 @RestController
@@ -33,19 +33,29 @@ public class NotificationController {
     @GetMapping
     @Operation(summary = "Listar notificaciones del usuario (paginadas)")
     public ResponseEntity<Page<NotificationResponse>> list(
-            @PageableDefault(size = 20) Pageable pageable,
+            @RequestParam(defaultValue = "false") boolean soloNoLeidas,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
             @AuthenticationPrincipal UserDetails userDetails) {
         UUID userId = resolveUserId(userDetails);
-        return ResponseEntity.ok(notificationService.listByUser(userId, pageable));
+        return ResponseEntity.ok(notificationService.getByUsuario(userId, soloNoLeidas, PageRequest.of(page, size)));
     }
 
-    @PutMapping("/{id}/read")
+    @PutMapping("/{id}/leer")
     @Operation(summary = "Marcar notificación como leída")
-    public ResponseEntity<Void> markAsRead(
+    public ResponseEntity<Void> marcarLeida(
             @PathVariable UUID id,
             @AuthenticationPrincipal UserDetails userDetails) {
+        notificationService.marcarLeida(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/leer-todas")
+    @Operation(summary = "Marcar todas las notificaciones como leídas")
+    public ResponseEntity<Void> marcarTodasLeidas(
+            @AuthenticationPrincipal UserDetails userDetails) {
         UUID userId = resolveUserId(userDetails);
-        notificationService.markAsRead(id, userId);
+        notificationService.marcarTodasLeidas(userId);
         return ResponseEntity.noContent().build();
     }
 

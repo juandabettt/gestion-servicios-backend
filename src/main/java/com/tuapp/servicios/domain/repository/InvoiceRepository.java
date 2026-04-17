@@ -36,6 +36,9 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
     @Query("SELECT i FROM Invoice i WHERE i.estado = 'PENDIENTE' AND i.fechaVencimiento < :hoy AND i.deletedAt IS NULL")
     List<Invoice> findVencidas(@Param("hoy") LocalDate hoy);
 
+    @Query("SELECT i FROM Invoice i WHERE i.fechaVencimiento = :fecha AND i.estado = :estado AND i.deletedAt IS NULL")
+    List<Invoice> findByFechaVencimientoAndEstado(@Param("fecha") LocalDate fecha, @Param("estado") EstadoFactura estado);
+
     Optional<Invoice> findByIdAndDeletedAtIsNull(UUID id);
 
     @Query("SELECT i FROM Invoice i WHERE i.property.id = :propertyId AND i.proveedor.id = :proveedorId AND i.deletedAt IS NULL ORDER BY i.fechaEmision DESC")
