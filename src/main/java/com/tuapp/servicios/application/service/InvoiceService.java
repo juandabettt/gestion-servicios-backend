@@ -50,20 +50,21 @@ public class InvoiceService {
         Property property = propertyRepository.findByIdAndUserIdAndDeletedAtIsNull(propertyId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Propiedad", propertyId));
         String objectKey = buildObjectKey(userId, propertyId, file.getOriginalFilename());
+        String storageUrl;
         try {
-            fileStoragePort.upload(objectKey, file.getBytes(), file.getContentType());
+            storageUrl = fileStoragePort.upload(objectKey, file.getBytes(), file.getContentType());
         } catch (Exception e) {
             throw new BusinessException("Error al subir el archivo", HttpStatus.INTERNAL_SERVER_ERROR);
         }
         Invoice invoice = Invoice.builder()
                 .property(property)
                 .estado(EstadoFactura.PROCESANDO_OCR)
-                .urlFotoFactura(objectKey)
+                .urlFotoFactura(storageUrl)
                 .build();
         invoice = invoiceRepository.save(invoice);
         jobQueueService.enqueue(TipoJob.OCR_FACTURA, Map.of(
                 "invoiceId", invoice.getId().toString(),
-                "objectKey", objectKey));
+                "objectKey", storageUrl));
         log.info("Factura recibida. Job OCR encolado.");
         return UploadInvoiceResponse.builder()
                 .invoiceId(invoice.getId())
