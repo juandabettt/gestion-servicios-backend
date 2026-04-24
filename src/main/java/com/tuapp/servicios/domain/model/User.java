@@ -45,6 +45,12 @@ public class User extends BaseAuditEntity {
     @Column(name = "telefono", length = 20)
     private String telefono;
 
+    @Column(name = "ciudad", length = 100)
+    private String ciudad;
+
+    @Column(name = "documento", length = 50)
+    private String documento;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private List<Property> properties = new ArrayList<>();
