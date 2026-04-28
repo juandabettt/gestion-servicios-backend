@@ -15,7 +15,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-@Profile("test")
+@Profile({"production", "test"})
 @Slf4j
 public class MockPaymentGatewayAdapter implements PaymentGatewayPort {
 
