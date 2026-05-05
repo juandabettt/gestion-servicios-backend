@@ -1,6 +1,5 @@
 package com.tuapp.servicios.application.dto.request;
 
-import com.tuapp.servicios.domain.enums.MetodoPago;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -9,8 +8,14 @@ import java.math.BigDecimal;
 @Data
 @Schema(description = "Actualización de regla de autopago")
 public class UpdateAutoPayRuleRequest {
-    @Schema(description = "Método de pago")
-    private MetodoPago metodoPago;
+
+    @Size(max = 100)
+    @Schema(description = "Nuevo nombre de la regla")
+    private String nombre;
+
+    @Pattern(regexp = "ENERGIA|AGUA|GAS|INTERNET|TELEFONIA|TODOS")
+    @Schema(description = "Tipo de servicio")
+    private String tipoServicio;
 
     @Min(1) @Max(30)
     @Schema(description = "Días antes del vencimiento")
@@ -20,5 +25,5 @@ public class UpdateAutoPayRuleRequest {
     private BigDecimal montoMaximo;
 
     @Schema(description = "Activar o desactivar la regla")
-    private Boolean activo;
+    private Boolean activa;
 }

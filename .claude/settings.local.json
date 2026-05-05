@@ -22,7 +22,12 @@
       "Bash(cmd.exe /c \"cd C:\\\\\\\\Users\\\\\\\\samue\\\\\\\\Desktop\\\\\\\\ServiciosYa && mvn compile 2>&1\")",
       "Bash(powershell.exe -Command \"cd 'C:\\\\\\\\Users\\\\\\\\samue\\\\\\\\Desktop\\\\\\\\ServiciosYa'; mvn compile 2>&1\")",
       "Bash(powershell.exe *)",
-      "Bash(xargs wc *)"
+      "Bash(xargs wc *)",
+      "Bash(Get-Content *)",
+      "PowerShell(Get-Item *)",
+      "Bash(Get-ChildItem *)",
+      "Bash(xargs basename -a)",
+      "PowerShell(Get-Command *)"
     ]
   }
 }

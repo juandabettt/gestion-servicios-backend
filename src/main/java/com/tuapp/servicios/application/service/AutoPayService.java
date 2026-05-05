@@ -7,11 +7,9 @@ import com.tuapp.servicios.application.exception.BusinessException;
 import com.tuapp.servicios.application.exception.ResourceNotFoundException;
 import com.tuapp.servicios.application.mapper.AutoPayRuleMapper;
 import com.tuapp.servicios.domain.model.AutoPayRule;
-import com.tuapp.servicios.domain.model.Property;
-import com.tuapp.servicios.domain.model.ProviderCompany;
+import com.tuapp.servicios.domain.model.User;
 import com.tuapp.servicios.domain.repository.AutoPayRuleRepository;
-import com.tuapp.servicios.domain.repository.PropertyRepository;
-import com.tuapp.servicios.domain.repository.ProviderCompanyRepository;
+import com.tuapp.servicios.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -27,26 +25,27 @@ import java.util.UUID;
 public class AutoPayService {
 
     private final AutoPayRuleRepository autoPayRuleRepository;
-    private final PropertyRepository propertyRepository;
-    private final ProviderCompanyRepository providerRepository;
-    private final PropertyService propertyService;
+    private final UserRepository userRepository;
     private final AutoPayRuleMapper autoPayRuleMapper;
 
     @Transactional
     public AutoPayRuleResponse createRule(CreateAutoPayRuleRequest request, UUID userId) {
-        propertyService.validateOwnership(request.getPropertyId(), userId);
-        if (autoPayRuleRepository.existsByPropertyIdAndProveedorIdAndActivoTrueAndDeletedAtIsNull(
-                request.getPropertyId(), request.getProveedorId())) {
-            throw new BusinessException("Ya existe una regla activa para este proveedor y propiedad");
+        if (autoPayRuleRepository.existsByUsuarioIdAndNombreIgnoreCaseAndActivaTrueAndDeletedAtIsNull(
+                userId, request.getNombre())) {
+            throw new BusinessException("Ya existe una regla activa con ese nombre");
         }
-        Property property = propertyRepository.findById(request.getPropertyId())
-                .orElseThrow(() -> new ResourceNotFoundException("Propiedad", request.getPropertyId()));
-        ProviderCompany provider = providerRepository.findById(request.getProveedorId())
-                .orElseThrow(() -> new ResourceNotFoundException("Proveedor", request.getProveedorId()));
+        User usuario = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", userId));
+        String tipoServicio = request.getTipoServicio() != null ? request.getTipoServicio() : "TODOS";
         AutoPayRule rule = AutoPayRule.builder()
-                .property(property).proveedor(provider).metodoPago(request.getMetodoPago())
+                .usuario(usuario)
+                .nombre(request.getNombre())
+                .tipoServicio(tipoServicio)
                 .diasAntesVencimiento(request.getDiasAntesVencimiento())
-                .montoMaximo(request.getMontoMaximo()).activo(true).build();
+                .montoMaximo(request.getMontoMaximo())
+                .activa(true)
+                .totalPagosRealizados(0)
+                .build();
         return autoPayRuleMapper.toResponse(autoPayRuleRepository.save(rule));
     }
 
@@ -59,11 +58,14 @@ public class AutoPayService {
     public AutoPayRuleResponse updateRule(UUID ruleId, UpdateAutoPayRuleRequest request, UUID userId) {
         AutoPayRule rule = autoPayRuleRepository.findByIdAndDeletedAtIsNull(ruleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Regla de autopago", ruleId));
-        propertyService.validateOwnership(rule.getProperty().getId(), userId);
-        if (request.getMetodoPago() != null) rule.setMetodoPago(request.getMetodoPago());
+        if (!rule.getUsuario().getId().equals(userId)) {
+            throw new BusinessException("No tienes permiso para modificar esta regla");
+        }
+        if (request.getNombre() != null) rule.setNombre(request.getNombre());
+        if (request.getTipoServicio() != null) rule.setTipoServicio(request.getTipoServicio());
         if (request.getDiasAntesVencimiento() != null) rule.setDiasAntesVencimiento(request.getDiasAntesVencimiento());
         if (request.getMontoMaximo() != null) rule.setMontoMaximo(request.getMontoMaximo());
-        if (request.getActivo() != null) rule.setActivo(request.getActivo());
+        if (request.getActiva() != null) rule.setActiva(request.getActiva());
         return autoPayRuleMapper.toResponse(autoPayRuleRepository.save(rule));
     }
 
@@ -71,7 +73,9 @@ public class AutoPayService {
     public void deleteRule(UUID ruleId, UUID userId) {
         AutoPayRule rule = autoPayRuleRepository.findByIdAndDeletedAtIsNull(ruleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Regla de autopago", ruleId));
-        propertyService.validateOwnership(rule.getProperty().getId(), userId);
+        if (!rule.getUsuario().getId().equals(userId)) {
+            throw new BusinessException("No tienes permiso para eliminar esta regla");
+        }
         rule.softDelete();
         autoPayRuleRepository.save(rule);
     }

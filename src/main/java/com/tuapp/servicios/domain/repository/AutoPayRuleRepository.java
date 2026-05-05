@@ -15,12 +15,12 @@ import java.util.UUID;
 @Repository
 public interface AutoPayRuleRepository extends JpaRepository<AutoPayRule, UUID> {
 
-    @Query("SELECT r FROM AutoPayRule r WHERE r.property.user.id = :userId AND r.deletedAt IS NULL")
+    @Query("SELECT r FROM AutoPayRule r WHERE r.usuario.id = :userId AND r.deletedAt IS NULL")
     Page<AutoPayRule> findByUserId(@Param("userId") UUID userId, Pageable pageable);
 
-    List<AutoPayRule> findByActivoTrueAndDeletedAtIsNull();
+    List<AutoPayRule> findByActivaTrueAndDeletedAtIsNull();
 
     Optional<AutoPayRule> findByIdAndDeletedAtIsNull(UUID id);
 
-    boolean existsByPropertyIdAndProveedorIdAndActivoTrueAndDeletedAtIsNull(UUID propertyId, UUID proveedorId);
+    boolean existsByUsuarioIdAndNombreIgnoreCaseAndActivaTrueAndDeletedAtIsNull(UUID usuarioId, String nombre);
 }

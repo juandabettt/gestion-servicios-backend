@@ -3,11 +3,15 @@ package com.tuapp.servicios.infrastructure.scheduler;
 import com.tuapp.servicios.application.service.JobQueueService;
 import com.tuapp.servicios.application.service.NotificationService;
 import com.tuapp.servicios.domain.enums.EstadoFactura;
+import com.tuapp.servicios.domain.enums.MetodoPago;
 import com.tuapp.servicios.domain.enums.TipoJob;
+import com.tuapp.servicios.domain.enums.TipoServicio;
 import com.tuapp.servicios.domain.model.AutoPayRule;
 import com.tuapp.servicios.domain.model.Invoice;
+import com.tuapp.servicios.domain.model.UserPreferences;
 import com.tuapp.servicios.domain.repository.AutoPayRuleRepository;
 import com.tuapp.servicios.domain.repository.InvoiceRepository;
+import com.tuapp.servicios.domain.repository.UserPreferencesRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,6 +22,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -26,39 +31,40 @@ public class AutoPayScheduler {
 
     private final AutoPayRuleRepository autoPayRuleRepository;
     private final InvoiceRepository invoiceRepository;
+    private final UserPreferencesRepository userPreferencesRepository;
     private final JobQueueService jobQueueService;
     private final NotificationService notificationService;
 
-    // Ejecutar cada día a las 9am
     @Scheduled(cron = "0 0 9 * * *")
     @Transactional
     public void evaluateAutoPayRules() {
         log.info("Evaluando reglas de autopago...");
 
-        List<AutoPayRule> reglasActivas = autoPayRuleRepository.findByActivoTrueAndDeletedAtIsNull();
+        List<AutoPayRule> reglasActivas = autoPayRuleRepository.findByActivaTrueAndDeletedAtIsNull();
         int autopagosEncolados = 0;
 
         for (AutoPayRule regla : reglasActivas) {
             LocalDate fechaLimite = LocalDate.now().plusDays(regla.getDiasAntesVencimiento());
+            UUID userId = regla.getUsuario().getId();
 
-            List<Invoice> facturasPendientes = invoiceRepository
-                    .findPendientesByPropertyAndVencimiento(
-                            regla.getProperty().getId(), fechaLimite);
+            List<Invoice> facturasPendientes = resolverFacturas(regla, userId, fechaLimite);
+
+            MetodoPago metodoPago = resolverMetodoPago(userId);
 
             for (Invoice factura : facturasPendientes) {
                 if (regla.getMontoMaximo() != null &&
+                        factura.getMontoTotal() != null &&
                         factura.getMontoTotal().compareTo(regla.getMontoMaximo()) > 0) {
-                    // Monto supera el límite — NO pagar, notificar
                     notificationService.notificarAutoPagoFallido(
-                            regla.getProperty().getUser(), factura,
+                            regla.getUsuario(), factura,
                             "Monto excede el límite configurado (" + regla.getMontoMaximo() + ")");
                     log.warn("Autopago omitido — monto supera límite configurado");
                 } else {
-                    // Encolar autopago
                     jobQueueService.enqueue(TipoJob.AUTOPAGO, Map.of(
                             "invoiceId", factura.getId().toString(),
-                            "userId", regla.getProperty().getUser().getId().toString(),
-                            "metodoPago", regla.getMetodoPago().name()
+                            "userId", userId.toString(),
+                            "metodoPago", metodoPago.name(),
+                            "ruleId", regla.getId().toString()
                     ));
                     autopagosEncolados++;
                 }
@@ -71,11 +77,9 @@ public class AutoPayScheduler {
         log.info("Evaluación de autopagos completada — jobs encolados: {}", autopagosEncolados);
     }
 
-    // Alertar facturas próximas a vencer (notificaciones proactivas)
     @Scheduled(cron = "0 0 8 * * *")
     @Transactional
     public void alertarFacturasPorVencer() {
-        // Alertar con 5 días de anticipación por defecto
         LocalDate fechaLimite = LocalDate.now().plusDays(5);
         List<Invoice> facturasPorVencer = invoiceRepository.findAllPendientesProximasVencer(fechaLimite);
 
@@ -90,7 +94,6 @@ public class AutoPayScheduler {
         }
     }
 
-    // Marcar facturas vencidas
     @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void marcarFacturasVencidas() {
@@ -102,5 +105,20 @@ public class AutoPayScheduler {
         if (!vencidas.isEmpty()) {
             log.info("Facturas marcadas como vencidas: {}", vencidas.size());
         }
+    }
+
+    private List<Invoice> resolverFacturas(AutoPayRule regla, UUID userId, LocalDate fechaLimite) {
+        if ("TODOS".equalsIgnoreCase(regla.getTipoServicio())) {
+            return invoiceRepository.findPendientesByUserIdAndVencimiento(userId, fechaLimite);
+        }
+        TipoServicio ts = TipoServicio.valueOf(regla.getTipoServicio());
+        return invoiceRepository.findPendientesByUserIdAndTipoServicioAndVencimiento(userId, ts, fechaLimite);
+    }
+
+    private MetodoPago resolverMetodoPago(UUID userId) {
+        return userPreferencesRepository.findByUserId(userId)
+                .map(UserPreferences::getMetodoPagoDefault)
+                .filter(m -> m != null)
+                .orElse(MetodoPago.PSE);
     }
 }

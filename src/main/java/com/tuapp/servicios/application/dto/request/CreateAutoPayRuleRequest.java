@@ -1,32 +1,28 @@
 package com.tuapp.servicios.application.dto.request;
 
-import com.tuapp.servicios.domain.enums.MetodoPago;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.math.BigDecimal;
-import java.util.UUID;
 
 @Data
 @Schema(description = "Regla de autopago")
 public class CreateAutoPayRuleRequest {
-    @NotNull
-    @Schema(description = "ID de la propiedad")
-    private UUID propertyId;
 
-    @NotNull
-    @Schema(description = "ID del proveedor")
-    private UUID proveedorId;
+    @NotBlank
+    @Size(max = 100)
+    @Schema(description = "Nombre descriptivo de la regla", example = "Pagar luz automáticamente")
+    private String nombre;
 
-    @NotNull
-    @Schema(description = "Método de pago")
-    private MetodoPago metodoPago;
+    @Pattern(regexp = "ENERGIA|AGUA|GAS|INTERNET|TELEFONIA|TODOS")
+    @Schema(description = "Tipo de servicio a cubrir (TODOS para todos)", defaultValue = "TODOS")
+    private String tipoServicio = "TODOS";
 
     @NotNull @Min(1) @Max(30)
-    @Schema(description = "Días antes del vencimiento para ejecutar el pago", defaultValue = "2")
-    private Integer diasAntesVencimiento = 2;
+    @Schema(description = "Días antes del vencimiento para ejecutar el pago", defaultValue = "3")
+    private Integer diasAntesVencimiento = 3;
 
     @DecimalMin("0.01")
-    @Schema(description = "Monto máximo a pagar automáticamente (protección)")
+    @Schema(description = "Monto máximo a pagar automáticamente (null = sin límite)")
     private BigDecimal montoMaximo;
 }

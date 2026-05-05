@@ -30,6 +30,12 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
     @Query("SELECT i FROM Invoice i WHERE i.property.id = :propertyId AND i.estado = 'PENDIENTE' AND i.fechaVencimiento <= :fechaLimite AND i.deletedAt IS NULL")
     List<Invoice> findPendientesByPropertyAndVencimiento(@Param("propertyId") UUID propertyId, @Param("fechaLimite") LocalDate fechaLimite);
 
+    @Query("SELECT i FROM Invoice i JOIN i.property p WHERE p.user.id = :userId AND i.estado = 'PENDIENTE' AND i.fechaVencimiento <= :fechaLimite AND i.deletedAt IS NULL")
+    List<Invoice> findPendientesByUserIdAndVencimiento(@Param("userId") UUID userId, @Param("fechaLimite") LocalDate fechaLimite);
+
+    @Query("SELECT i FROM Invoice i JOIN i.property p WHERE p.user.id = :userId AND i.proveedor.tipoServicio = :tipoServicio AND i.estado = 'PENDIENTE' AND i.fechaVencimiento <= :fechaLimite AND i.deletedAt IS NULL")
+    List<Invoice> findPendientesByUserIdAndTipoServicioAndVencimiento(@Param("userId") UUID userId, @Param("tipoServicio") TipoServicio tipoServicio, @Param("fechaLimite") LocalDate fechaLimite);
+
     @Query("SELECT i FROM Invoice i WHERE i.estado = 'PENDIENTE' AND i.fechaVencimiento <= :fechaLimite AND i.deletedAt IS NULL")
     List<Invoice> findAllPendientesProximasVencer(@Param("fechaLimite") LocalDate fechaLimite);
 

@@ -7,8 +7,10 @@ import com.tuapp.servicios.application.port.dto.PaymentRequest;
 import com.tuapp.servicios.application.service.NotificationService;
 import com.tuapp.servicios.domain.enums.EstadoFactura;
 import com.tuapp.servicios.domain.enums.EstadoTransaccion;
+import com.tuapp.servicios.domain.enums.MetodoPago;
 import com.tuapp.servicios.domain.enums.ResultadoAudit;
 import com.tuapp.servicios.application.service.AuditService;
+import com.tuapp.servicios.domain.model.AutoPayRule;
 import com.tuapp.servicios.domain.model.Invoice;
 import com.tuapp.servicios.domain.model.PaymentTransaction;
 import com.tuapp.servicios.domain.repository.AutoPayRuleRepository;
@@ -30,6 +32,7 @@ public class AutoPayJobHandler {
 
     private final InvoiceRepository invoiceRepository;
     private final PaymentTransactionRepository transactionRepository;
+    private final AutoPayRuleRepository autoPayRuleRepository;
     private final PaymentGatewayPort paymentGatewayPort;
     private final NotificationService notificationService;
     private final AuditService auditService;
@@ -41,6 +44,7 @@ public class AutoPayJobHandler {
         UUID invoiceId = UUID.fromString((String) payload.get("invoiceId"));
         UUID userId = UUID.fromString((String) payload.get("userId"));
         String metodoPagoStr = (String) payload.get("metodoPago");
+        String ruleIdStr = (String) payload.get("ruleId");
 
         Invoice invoice = invoiceRepository.findByIdAndDeletedAtIsNull(invoiceId)
                 .orElseThrow(() -> new RuntimeException("Factura no encontrada: " + invoiceId));
@@ -56,7 +60,7 @@ public class AutoPayJobHandler {
         PaymentTransaction transaction = PaymentTransaction.builder()
                 .factura(invoice)
                 .montoTransaccion(invoice.getMontoTotal())
-                .metodoPago(com.tuapp.servicios.domain.enums.MetodoPago.valueOf(metodoPagoStr))
+                .metodoPago(MetodoPago.valueOf(metodoPagoStr))
                 .idempotencyKey("autopay-" + invoiceId + "-" + System.currentTimeMillis())
                 .build();
         transaction = transactionRepository.save(transaction);
@@ -80,6 +84,7 @@ public class AutoPayJobHandler {
             notificationService.notificarAutoPagoEjecutado(invoice.getProperty().getUser(), invoice);
             auditService.log(userId, "AUTOPAGO_EJECUTADO", "Invoice", invoiceId,
                     ResultadoAudit.EXITO, "Autopago ejecutado correctamente");
+            incrementarContadorRegla(ruleIdStr);
         } else {
             invoice.setEstado(EstadoFactura.PENDIENTE);
             notificationService.notificarAutoPagoFallido(invoice.getProperty().getUser(), invoice,
@@ -90,5 +95,18 @@ public class AutoPayJobHandler {
 
         transactionRepository.save(transaction);
         invoiceRepository.save(invoice);
+    }
+
+    private void incrementarContadorRegla(String ruleIdStr) {
+        if (ruleIdStr == null) return;
+        try {
+            UUID ruleId = UUID.fromString(ruleIdStr);
+            autoPayRuleRepository.findByIdAndDeletedAtIsNull(ruleId).ifPresent(rule -> {
+                rule.setTotalPagosRealizados(rule.getTotalPagosRealizados() + 1);
+                autoPayRuleRepository.save(rule);
+            });
+        } catch (IllegalArgumentException e) {
+            log.warn("ruleId inválido en payload de autopago: {}", ruleIdStr);
+        }
     }
 }
