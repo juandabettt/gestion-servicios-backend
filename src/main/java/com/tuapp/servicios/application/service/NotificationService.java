@@ -34,12 +34,37 @@ public class NotificationService {
     private final NotificationMapper notificationMapper;
 
     @Transactional
+    public void notificarFacturaAgregada(Invoice invoice) {
+        User user = invoice.getProperty().getUser();
+        String monto = invoice.getMontoTotal() != null ? invoice.getMontoTotal().toPlainString() : "?";
+        crearNotificacionInApp(user.getId(), invoice.getId(),
+                TipoNotificacion.FACTURA_AGREGADA.name(),
+                "Nueva factura registrada",
+                "Se registró una factura de $" + monto + " para " + invoice.getProperty().getNombre());
+    }
+
+    @Transactional
     public void notificarPagoConfirmado(Invoice invoice, PaymentTransaction transaction) {
         User user = invoice.getProperty().getUser();
+        String monto = invoice.getMontoTotal() != null ? invoice.getMontoTotal().toPlainString() : "?";
+        crearNotificacionInApp(user.getId(), invoice.getId(),
+                TipoNotificacion.PAGO_EXITOSO.name(),
+                "Pago realizado",
+                "Tu pago de $" + monto + " fue procesado exitosamente.");
         NotificationLog n = createAndSave(user, TipoNotificacion.PAGO_CONFIRMADO,
                 "Pago confirmado — " + invoice.getProveedor().getNombre(),
                 "Tu pago fue procesado exitosamente", invoice.getId());
         sendEmailIfEnabled(user, n);
+    }
+
+    @Transactional
+    public void notificarPagoFallido(Invoice invoice) {
+        User user = invoice.getProperty().getUser();
+        String monto = invoice.getMontoTotal() != null ? invoice.getMontoTotal().toPlainString() : "?";
+        crearNotificacionInApp(user.getId(), invoice.getId(),
+                TipoNotificacion.PAGO_FALLIDO.name(),
+                "Pago fallido",
+                "No se pudo procesar tu pago de $" + monto + ". Intenta de nuevo.");
     }
 
     @Transactional
@@ -69,6 +94,11 @@ public class NotificationService {
 
     @Transactional
     public void notificarAutoPagoEjecutado(User user, Invoice invoice) {
+        String monto = invoice.getMontoTotal() != null ? invoice.getMontoTotal().toPlainString() : "?";
+        crearNotificacionInApp(user.getId(), invoice.getId(),
+                TipoNotificacion.AUTOPAGO_EJECUTADO.name(),
+                "Autopago ejecutado",
+                "Se pagó automáticamente tu factura de $" + monto + ".");
         createAndSave(user, TipoNotificacion.AUTOPAGO_EJECUTADO,
                 "Autopago ejecutado",
                 "Se ejecutó un pago automático para " + invoice.getProveedor().getNombre(), invoice.getId());
@@ -104,6 +134,19 @@ public class NotificationService {
                 n.setLeida(true);
                 notificationRepository.save(n);
             });
+    }
+
+    private void crearNotificacionInApp(UUID usuarioId, UUID facturaId, String tipo, String titulo, String mensaje) {
+        if (notificationRepository.existsByFacturaIdAndTipo(facturaId, tipo)) {
+            return;
+        }
+        notificationRepository.save(Notification.builder()
+                .usuarioId(usuarioId)
+                .facturaId(facturaId)
+                .tipo(tipo)
+                .titulo(titulo)
+                .mensaje(mensaje)
+                .build());
     }
 
     private NotificationLog createAndSave(User user, TipoNotificacion tipo, String asunto,

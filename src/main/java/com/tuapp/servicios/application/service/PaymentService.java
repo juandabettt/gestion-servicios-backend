@@ -89,6 +89,7 @@ public class PaymentService {
             notificationService.notificarPagoConfirmado(invoice, transaction);
         } else if (result.getEstado() == EstadoTransaccion.RECHAZADA) {
             invoice.setEstado(EstadoFactura.PENDIENTE);
+            notificationService.notificarPagoFallido(invoice);
         }
 
         transactionRepository.save(transaction);

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tuapp.servicios.application.port.OcrServicePort;
 import com.tuapp.servicios.application.port.dto.OcrExtractionResult;
 import com.tuapp.servicios.application.port.FileStoragePort;
+import com.tuapp.servicios.application.service.NotificationService;
 import com.tuapp.servicios.domain.enums.EstadoFactura;
 import com.tuapp.servicios.domain.model.Invoice;
 import com.tuapp.servicios.domain.repository.InvoiceRepository;
@@ -25,6 +26,7 @@ public class OcrJobHandler {
     private final InvoiceRepository invoiceRepository;
     private final OcrServicePort ocrServicePort;
     private final FileStoragePort fileStoragePort;
+    private final NotificationService notificationService;
     private final ObjectMapper objectMapper;
 
     @Transactional
@@ -61,7 +63,10 @@ public class OcrJobHandler {
                 invoice.setOcrConfianza(result.getConfianza());
                 invoice.setOcrDatosRaw(result.getDatosRaw());
                 invoice.setEstado(EstadoFactura.PENDIENTE);
+                invoiceRepository.save(invoice);
                 log.info("OCR completado exitosamente — confianza: {}%", result.getConfianza());
+                notificationService.notificarFacturaAgregada(invoice);
+                return;
             }
         } else {
             invoice.setEstado(EstadoFactura.ERROR_OCR);

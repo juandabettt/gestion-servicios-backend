@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Collection;
 
 @Repository
 public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
@@ -44,6 +45,9 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
 
     @Query("SELECT i FROM Invoice i WHERE i.fechaVencimiento = :fecha AND i.estado = :estado AND i.deletedAt IS NULL")
     List<Invoice> findByFechaVencimientoAndEstado(@Param("fecha") LocalDate fecha, @Param("estado") EstadoFactura estado);
+
+    @Query("SELECT i FROM Invoice i WHERE i.fechaVencimiento = :fecha AND i.estado IN :estados AND i.deletedAt IS NULL")
+    List<Invoice> findByFechaVencimientoAndEstadoIn(@Param("fecha") LocalDate fecha, @Param("estados") Collection<EstadoFactura> estados);
 
     Optional<Invoice> findByIdAndDeletedAtIsNull(UUID id);
 
