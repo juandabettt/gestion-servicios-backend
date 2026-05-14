@@ -60,6 +60,14 @@ public class PaymentService {
                 "Estado actual: " + invoice.getEstado()
             );
         }
+
+        if (invoice.getMontoTotal() == null) {
+            throw new BusinessException(
+                "La factura no tiene monto definido",
+                HttpStatus.BAD_REQUEST
+            );
+        }
+
         invoice.setEstado(EstadoFactura.PROCESANDO_PAGO);
         invoiceRepository.save(invoice);
 
@@ -72,6 +80,15 @@ public class PaymentService {
                 .build();
         transaction = transactionRepository.save(transaction);
 
+        String codigoConvenio;
+        if (invoice.getProveedor() != null) {
+            codigoConvenio = invoice.getProveedor().getCodigoConvenioRecaudo();
+        } else {
+            codigoConvenio = "MOCK-CONVENIO-" + invoice.getId().toString().substring(0, 8);
+            log.warn("Factura {} no tiene proveedor asignado, usando código mock para simulación",
+                     invoice.getId());
+        }
+
         PaymentInitiationResult result = paymentGatewayPort.initiatePayment(
                 PaymentRequest.builder()
                         .invoiceId(invoice.getId())
@@ -79,7 +96,7 @@ public class PaymentService {
                         .metodoPago(request.getMetodoPago())
                         .bancoOrigen(request.getBancoOrigen())
                         .idempotencyKey(request.getIdempotencyKey())
-                        .codigoConvenioRecaudo(invoice.getProveedor().getCodigoConvenioRecaudo())
+                        .codigoConvenioRecaudo(codigoConvenio)
                         .numeroReferencia(invoice.getNumeroReferencia())
                         .build());
 
