@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 
@@ -43,8 +42,9 @@ public class OcrJobHandler {
 
             log.info("Procesando OCR para factura");
 
-            String imageUrl = fileStoragePort.generatePresignedUrl(objectKey, Duration.ofMinutes(15));
-            log.info("URL de imagen obtenida para OCR");
+            // La URL de Cloudinary ya es pública, usarla directamente
+            String imageUrl = objectKey;
+            log.info("Usando URL directa de Cloudinary para OCR");
 
             OcrExtractionResult result = ocrServicePort.extractInvoiceData(imageUrl.getBytes(StandardCharsets.UTF_8), "url");
 
