@@ -45,27 +45,41 @@ public class ClaudeOcrServiceAdapter implements OcrServicePort {
     private final ObjectMapper objectMapper;
 
     private static final String PROMPT = """
-        Eres un asistente especializado en leer facturas de servicios públicos colombianos.
-        Analiza esta imagen de factura y extrae la siguiente información en formato JSON.
+        Analiza esta imagen de una factura de servicio público colombiano
+        y extrae los siguientes datos con precisión.
 
-        IMPORTANTE:
-        - Si no puedes leer un campo claramente, usa null
-        - Los montos deben ser números sin puntos ni comas (ejemplo: 150000)
-        - Las fechas deben estar en formato YYYY-MM-DD
-        - Responde SOLO con el JSON, sin texto adicional, sin markdown, sin explicaciones
+        INSTRUCCIONES IMPORTANTES:
+        - Para el PROVEEDOR: busca el nombre de la empresa en el logo o
+          encabezado principal. Ejemplos: CEDENAR, EMPOPASTO, ALCANOS,
+          CLARO, ETB, MOVISTAR, EPM, CODENSA. Devuelve SOLO el nombre
+          sin texto adicional.
+        - Para el PERÍODO: busca "MES FACTURADO" o "PERÍODO FACTURADO".
+          Devuelve en formato YYYY-MM (ejemplo: 2026-03 para MARZO/2026).
+        - Para la FECHA DE VENCIMIENTO: busca "PAGO OPORTUNO", "FECHA
+          LÍMITE DE PAGO" o "VENCE". Formato: YYYY-MM-DD.
+        - Para el MONTO: busca "TOTAL A PAGAR", "VALOR A PAGAR" o
+          "VALOR FACTURA". Solo el número sin símbolos ni puntos de miles.
+        - Para el CONSUMO: busca en la sección "DATOS DEL CONSUMO" o
+          "CONSUMO DEL PERÍODO" el valor numérico del consumo real
+          del período actual. Para energía son kWh, para agua son m³.
+        - Para el TIPO DE SERVICIO: determina si es
+          ENERGIA, AGUA, GAS o INTERNET basándote en el contenido.
 
-        Formato de respuesta:
+        Responde ÚNICAMENTE con este JSON sin texto adicional:
         {
-          "empresa": "nombre de la empresa que emite la factura",
-          "numeroReferencia": "número o referencia de la factura",
-          "fechaEmision": "YYYY-MM-DD",
+          "empresa": "nombre exacto del proveedor",
+          "tipoServicio": "ENERGIA|AGUA|GAS|INTERNET",
+          "periodoFacturado": "YYYY-MM",
           "fechaVencimiento": "YYYY-MM-DD",
-          "periodoFacturado": "periodo que cubre la factura ej: 2025-03",
-          "montoTotal": 150000,
-          "consumoUnidad": 284,
-          "unidadMedida": "kWh|m3|minutos|etc",
-          "confianza": 85
+          "montoTotal": numero_sin_puntos_ni_comas,
+          "consumoUnidad": numero_decimal,
+          "unidadMedida": "kWh|m3|GB",
+          "numeroReferencia": "referencia o consecutivo de pago",
+          "confianza": numero_entre_0_y_100
         }
+
+        Si no encuentras algún dato, usa null para ese campo.
+        NO incluyas texto antes o después del JSON.
         """;
 
     @Override
@@ -219,7 +233,6 @@ public class ClaudeOcrServiceAdapter implements OcrServicePort {
             return OcrExtractionResult.builder()
                     .empresa(getTextOrNull(data, "empresa"))
                     .numeroReferencia(getTextOrNull(data, "numeroReferencia"))
-                    .fechaEmision(parseDate(getTextOrNull(data, "fechaEmision")))
                     .fechaVencimiento(parseDate(getTextOrNull(data, "fechaVencimiento")))
                     .periodoFacturado(getTextOrNull(data, "periodoFacturado"))
                     .montoTotal(getBigDecimalOrNull(data, "montoTotal"))
