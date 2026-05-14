@@ -8,6 +8,7 @@ import com.tuapp.servicios.application.service.NotificationService;
 import com.tuapp.servicios.domain.enums.EstadoFactura;
 import com.tuapp.servicios.domain.model.Invoice;
 import com.tuapp.servicios.domain.repository.InvoiceRepository;
+import com.tuapp.servicios.domain.repository.ProviderCompanyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -28,6 +29,7 @@ public class OcrJobHandler {
     private final FileStoragePort fileStoragePort;
     private final NotificationService notificationService;
     private final ObjectMapper objectMapper;
+    private final ProviderCompanyRepository providerCompanyRepository;
 
     @Transactional
     public void handle(String payloadJson) throws Exception {
@@ -63,6 +65,23 @@ public class OcrJobHandler {
                     invoice.setPeriodoFacturado(result.getPeriodoFacturado());
                     invoice.setOcrConfianza(result.getConfianza());
                     invoice.setOcrDatosRaw(result.getDatosRaw());
+
+                    if (result.getEmpresa() != null && !result.getEmpresa().isBlank()) {
+                        String empresaNombre = result.getEmpresa().trim().toUpperCase();
+                        providerCompanyRepository
+                            .findByNombreContainingIgnoreCase(empresaNombre)
+                            .ifPresentOrElse(
+                                proveedor -> {
+                                    invoice.setProveedor(proveedor);
+                                    log.info("Proveedor asignado: {}", proveedor.getNombre());
+                                },
+                                () -> {
+                                    log.warn("Proveedor '{}' no encontrado en BD", empresaNombre);
+                                    invoice.setProveedorNombreOcr(empresaNombre);
+                                }
+                            );
+                    }
+
                     invoice.setEstado(EstadoFactura.PENDIENTE);
                     invoiceRepository.save(invoice);
                     log.info("OCR completado exitosamente — confianza: {}%", result.getConfianza());

@@ -8,6 +8,7 @@ import java.time.LocalDate;
 @Data @Builder
 public class OcrExtractionResult {
     private String empresa;
+    private String tipoServicio;
     private String numeroReferencia;
     private LocalDate fechaEmision;
     private LocalDate fechaVencimiento;

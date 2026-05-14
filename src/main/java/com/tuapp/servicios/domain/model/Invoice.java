@@ -73,4 +73,7 @@ public class Invoice extends BaseAuditEntity {
     @Column(name = "ingreso_manual")
     @Builder.Default
     private Boolean ingresoManual = false;
+
+    @Column(name = "proveedor_nombre_ocr", length = 255)
+    private String proveedorNombreOcr;
 }

@@ -232,6 +232,7 @@ public class ClaudeOcrServiceAdapter implements OcrServicePort {
 
             return OcrExtractionResult.builder()
                     .empresa(getTextOrNull(data, "empresa"))
+                    .tipoServicio(getTextOrNull(data, "tipoServicio"))
                     .numeroReferencia(getTextOrNull(data, "numeroReferencia"))
                     .fechaVencimiento(parseDate(getTextOrNull(data, "fechaVencimiento")))
                     .periodoFacturado(getTextOrNull(data, "periodoFacturado"))
