@@ -31,48 +31,66 @@ public class OcrJobHandler {
 
     @Transactional
     public void handle(String payloadJson) throws Exception {
-        Map<String, Object> payload = objectMapper.readValue(payloadJson, Map.class);
-        UUID invoiceId = UUID.fromString((String) payload.get("invoiceId"));
-        String objectKey = (String) payload.get("objectKey");
+        try {
+            Map<String, Object> payload = objectMapper.readValue(payloadJson, Map.class);
+            UUID invoiceId = UUID.fromString((String) payload.get("invoiceId"));
+            String objectKey = (String) payload.get("objectKey");
 
-        Invoice invoice = invoiceRepository.findByIdAndDeletedAtIsNull(invoiceId)
-                .orElseThrow(() -> new RuntimeException("Factura no encontrada: " + invoiceId));
+            Invoice invoice = invoiceRepository.findByIdAndDeletedAtIsNull(invoiceId)
+                    .orElseThrow(() -> new RuntimeException("Factura no encontrada: " + invoiceId));
 
-        log.info("Procesando OCR para factura");
+            log.info("Procesando OCR para factura");
 
-        String imageUrl = fileStoragePort.generatePresignedUrl(objectKey, Duration.ofMinutes(15));
-        log.info("URL de imagen obtenida para OCR");
+            String imageUrl = fileStoragePort.generatePresignedUrl(objectKey, Duration.ofMinutes(15));
+            log.info("URL de imagen obtenida para OCR");
 
-        OcrExtractionResult result = ocrServicePort.extractInvoiceData(imageUrl.getBytes(StandardCharsets.UTF_8), "url");
+            OcrExtractionResult result = ocrServicePort.extractInvoiceData(imageUrl.getBytes(StandardCharsets.UTF_8), "url");
 
-        if (result.isExitoso()) {
-            boolean confianzaBaja = result.getConfianza() == null
-                    || result.getConfianza().compareTo(new BigDecimal("30")) < 0;
-            if (confianzaBaja && result.getMontoTotal() == null) {
-                log.warn("La imagen no parece ser una factura válida — confianza: {}, montoTotal: null",
-                        result.getConfianza());
-                invoice.setEstado(EstadoFactura.ERROR_OCR);
+            if (result.isExitoso()) {
+                boolean confianzaBaja = result.getConfianza() == null
+                        || result.getConfianza().compareTo(new BigDecimal("30")) < 0;
+                if (confianzaBaja && result.getMontoTotal() == null) {
+                    log.warn("La imagen no parece ser una factura válida — confianza: {}, montoTotal: null",
+                            result.getConfianza());
+                    invoice.setEstado(EstadoFactura.ERROR_OCR);
+                } else {
+                    invoice.setNumeroReferencia(result.getNumeroReferencia());
+                    invoice.setFechaEmision(result.getFechaEmision());
+                    invoice.setFechaVencimiento(result.getFechaVencimiento());
+                    invoice.setMontoTotal(result.getMontoTotal());
+                    invoice.setConsumoUnidad(result.getConsumoUnidad());
+                    invoice.setUnidadMedida(result.getUnidadMedida());
+                    invoice.setPeriodoFacturado(result.getPeriodoFacturado());
+                    invoice.setOcrConfianza(result.getConfianza());
+                    invoice.setOcrDatosRaw(result.getDatosRaw());
+                    invoice.setEstado(EstadoFactura.PENDIENTE);
+                    invoiceRepository.save(invoice);
+                    log.info("OCR completado exitosamente — confianza: {}%", result.getConfianza());
+                    notificationService.notificarFacturaAgregada(invoice);
+                    return;
+                }
             } else {
-                invoice.setNumeroReferencia(result.getNumeroReferencia());
-                invoice.setFechaEmision(result.getFechaEmision());
-                invoice.setFechaVencimiento(result.getFechaVencimiento());
-                invoice.setMontoTotal(result.getMontoTotal());
-                invoice.setConsumoUnidad(result.getConsumoUnidad());
-                invoice.setUnidadMedida(result.getUnidadMedida());
-                invoice.setPeriodoFacturado(result.getPeriodoFacturado());
-                invoice.setOcrConfianza(result.getConfianza());
-                invoice.setOcrDatosRaw(result.getDatosRaw());
-                invoice.setEstado(EstadoFactura.PENDIENTE);
-                invoiceRepository.save(invoice);
-                log.info("OCR completado exitosamente — confianza: {}%", result.getConfianza());
-                notificationService.notificarFacturaAgregada(invoice);
-                return;
+                invoice.setEstado(EstadoFactura.ERROR_OCR);
+                log.warn("OCR falló: {}", result.getErrorMensaje());
             }
-        } else {
-            invoice.setEstado(EstadoFactura.ERROR_OCR);
-            log.warn("OCR falló: {}", result.getErrorMensaje());
-        }
 
-        invoiceRepository.save(invoice);
+            invoiceRepository.save(invoice);
+        } catch (Exception e) {
+            log.error("OCR processing failed: {}", e.getMessage(), e);
+            UUID invoiceId = null;
+            try {
+                Map<String, Object> payload = objectMapper.readValue(payloadJson, Map.class);
+                invoiceId = UUID.fromString((String) payload.get("invoiceId"));
+                Invoice invoice = invoiceRepository.findByIdAndDeletedAtIsNull(invoiceId)
+                        .orElse(null);
+                if (invoice != null) {
+                    invoice.setEstado(EstadoFactura.ERROR_OCR);
+                    invoiceRepository.save(invoice);
+                    log.info("Factura {} marcada como ERROR_OCR debido a excepción durante OCR", invoiceId);
+                }
+            } catch (Exception ex) {
+                log.error("Failed to mark invoice as ERROR_OCR: {}", ex.getMessage(), ex);
+            }
+        }
     }
 }

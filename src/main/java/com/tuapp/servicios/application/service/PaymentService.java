@@ -53,8 +53,12 @@ public class PaymentService {
                     .build();
         }
         Invoice invoice = ownershipValidator.validateAndGet(request.getInvoiceId(), userId);
-        if (invoice.getEstado() != EstadoFactura.PENDIENTE) {
-            throw new BusinessException("La factura no está en estado PENDIENTE. Estado actual: " + invoice.getEstado());
+        if (invoice.getEstado() != EstadoFactura.PENDIENTE &&
+            invoice.getEstado() != EstadoFactura.VENCIDA) {
+            throw new BusinessException(
+                "La factura debe estar en estado PENDIENTE o VENCIDA para poder pagarla. " +
+                "Estado actual: " + invoice.getEstado()
+            );
         }
         invoice.setEstado(EstadoFactura.PROCESANDO_PAGO);
         invoiceRepository.save(invoice);
