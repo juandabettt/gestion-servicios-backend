@@ -17,9 +17,11 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 import jakarta.annotation.PostConstruct;
 import java.net.URI;
 import java.time.Duration;
+import org.springframework.context.annotation.Lazy;
 
 @Component
 @Profile("local")
+@Lazy
 @Slf4j
 public class MinIOFileStorageAdapter implements FileStoragePort {
 
@@ -39,24 +41,30 @@ public class MinIOFileStorageAdapter implements FileStoragePort {
 
     @PostConstruct
     public void init() {
-        AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
-        StaticCredentialsProvider credentialsProvider = StaticCredentialsProvider.create(credentials);
-        Region awsRegion = Region.of(region);
+        try {
+            AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
+            StaticCredentialsProvider credentialsProvider = StaticCredentialsProvider.create(credentials);
+            Region awsRegion = Region.of(region);
 
-        this.s3Client = S3Client.builder()
-                .endpointOverride(URI.create(endpoint))
-                .credentialsProvider(credentialsProvider)
-                .region(awsRegion)
-                .forcePathStyle(true)
-                .build();
+            this.s3Client = S3Client.builder()
+                    .endpointOverride(URI.create(endpoint))
+                    .credentialsProvider(credentialsProvider)
+                    .region(awsRegion)
+                    .forcePathStyle(true)
+                    .build();
 
-        this.presigner = S3Presigner.builder()
-                .endpointOverride(URI.create(endpoint))
-                .credentialsProvider(credentialsProvider)
-                .region(awsRegion)
-                .build();
+            this.presigner = S3Presigner.builder()
+                    .endpointOverride(URI.create(endpoint))
+                    .credentialsProvider(credentialsProvider)
+                    .region(awsRegion)
+                    .build();
 
-        ensureBucketExists();
+            ensureBucketExists();
+            log.info("MinIO initialized successfully at {}", endpoint);
+        } catch (Exception e) {
+            log.warn("MinIO initialization failed (expected in local without proper setup): {}", e.getMessage());
+            log.debug("MinIO error details", e);
+        }
     }
 
     private void ensureBucketExists() {

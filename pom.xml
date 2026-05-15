@@ -175,6 +175,18 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Apache HTTP Components (required by AWS SDK for ApacheHttpClient) -->
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.14</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <version>4.4.16</version>
+        </dependency>
+
         <!-- Redis Lettuce (already included via spring-boot-starter-data-redis) -->
 
         <!-- Testing -->

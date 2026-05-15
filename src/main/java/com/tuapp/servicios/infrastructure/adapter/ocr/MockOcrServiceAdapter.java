@@ -26,6 +26,7 @@ public class MockOcrServiceAdapter implements OcrServicePort {
         "Aguas de Pasto", "Electricaribe", "Gases del Caribe", "Claro Colombia", "ETB"
     };
     private static final String[] PERIODOS = {"2025-01", "2025-02", "2025-03"};
+    private static final String[] TIPOS_SERVICIO = {"ENERGIA", "AGUA", "GAS", "INTERNET"};
 
     @Override
     public OcrExtractionResult extractInvoiceData(byte[] imageBytes, String mimeType) {
@@ -39,6 +40,7 @@ public class MockOcrServiceAdapter implements OcrServicePort {
 
         String empresa = EMPRESAS[random.nextInt(EMPRESAS.length)];
         String periodo = PERIODOS[random.nextInt(PERIODOS.length)];
+        String tipoServicio = TIPOS_SERVICIO[random.nextInt(TIPOS_SERVICIO.length)];
         BigDecimal monto = BigDecimal.valueOf(50000 + random.nextInt(200000));
         BigDecimal consumo = BigDecimal.valueOf(50 + random.nextInt(300));
         LocalDate emision = LocalDate.now().minusMonths(1);
@@ -57,6 +59,7 @@ public class MockOcrServiceAdapter implements OcrServicePort {
 
         return OcrExtractionResult.builder()
                 .empresa(empresa)
+                .tipoServicio(tipoServicio)
                 .numeroReferencia("REF-" + random.nextInt(999999999))
                 .fechaEmision(emision)
                 .fechaVencimiento(vencimiento)
