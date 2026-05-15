@@ -68,6 +68,13 @@ public class PaymentService {
             );
         }
 
+        if (invoice.getNumeroReferencia() == null || invoice.getNumeroReferencia().isBlank()) {
+            throw new BusinessException(
+                "La factura no tiene número de referencia. Revisa que el OCR completó correctamente.",
+                HttpStatus.BAD_REQUEST
+            );
+        }
+
         invoice.setEstado(EstadoFactura.PROCESANDO_PAGO);
         invoiceRepository.save(invoice);
 
@@ -81,7 +88,7 @@ public class PaymentService {
         transaction = transactionRepository.save(transaction);
 
         String codigoConvenio;
-        if (invoice.getProveedor() != null) {
+        if (invoice.getProveedor() != null && invoice.getProveedor().getCodigoConvenioRecaudo() != null) {
             codigoConvenio = invoice.getProveedor().getCodigoConvenioRecaudo();
         } else {
             codigoConvenio = "MOCK-CONVENIO-" + invoice.getId().toString().substring(0, 8);
