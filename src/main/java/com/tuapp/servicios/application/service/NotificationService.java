@@ -51,8 +51,11 @@ public class NotificationService {
                 TipoNotificacion.PAGO_EXITOSO.name(),
                 "Pago realizado",
                 "Tu pago de $" + monto + " fue procesado exitosamente.");
+        String proveedorNombre = invoice.getProveedor() != null
+            ? invoice.getProveedor().getNombre()
+            : invoice.getProperty().getNombre();
         NotificationLog n = createAndSave(user, TipoNotificacion.PAGO_CONFIRMADO,
-                "Pago confirmado — " + invoice.getProveedor().getNombre(),
+                "Pago confirmado — " + proveedorNombre,
                 "Tu pago fue procesado exitosamente", invoice.getId());
         sendEmailIfEnabled(user, n);
     }
@@ -70,9 +73,12 @@ public class NotificationService {
     @Transactional
     public void notificarFacturaPorVencer(Invoice invoice, int diasRestantes) {
         User user = invoice.getProperty().getUser();
+        String proveedorNombre = invoice.getProveedor() != null
+            ? invoice.getProveedor().getNombre()
+            : invoice.getProperty().getNombre();
         NotificationLog n = createAndSave(user, TipoNotificacion.FACTURA_POR_VENCER,
                 "Tu factura vence en " + diasRestantes + " días",
-                "La factura de " + invoice.getProveedor().getNombre() + " vence pronto", invoice.getId());
+                "La factura de " + proveedorNombre + " vence pronto", invoice.getId());
         sendEmailIfEnabled(user, n);
     }
 
@@ -99,9 +105,12 @@ public class NotificationService {
                 TipoNotificacion.AUTOPAGO_EJECUTADO.name(),
                 "Autopago ejecutado",
                 "Se pagó automáticamente tu factura de $" + monto + ".");
+        String proveedorNombre = invoice.getProveedor() != null
+            ? invoice.getProveedor().getNombre()
+            : invoice.getProperty().getNombre();
         createAndSave(user, TipoNotificacion.AUTOPAGO_EJECUTADO,
                 "Autopago ejecutado",
-                "Se ejecutó un pago automático para " + invoice.getProveedor().getNombre(), invoice.getId());
+                "Se ejecutó un pago automático para " + proveedorNombre, invoice.getId());
     }
 
     @Transactional
