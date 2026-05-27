@@ -8,6 +8,7 @@ import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -76,4 +77,10 @@ public class Invoice extends BaseAuditEntity {
 
     @Column(name = "proveedor_nombre_ocr", length = 255)
     private String proveedorNombreOcr;
+
+    @Column(name = "fecha_pago")
+    private LocalDateTime fechaPago;
+
+    @Column(name = "metodo_pago")
+    private String metodoPago;
 }

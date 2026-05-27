@@ -187,6 +187,13 @@
             <version>4.4.16</version>
         </dependency>
 
+        <!-- Stripe -->
+        <dependency>
+            <groupId>com.stripe</groupId>
+            <artifactId>stripe-java</artifactId>
+            <version>24.0.0</version>
+        </dependency>
+
         <!-- Redis Lettuce (already included via spring-boot-starter-data-redis) -->
 
         <!-- Testing -->
