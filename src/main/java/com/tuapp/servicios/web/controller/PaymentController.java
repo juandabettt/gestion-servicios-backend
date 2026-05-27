@@ -30,6 +30,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -87,6 +88,7 @@ public class PaymentController {
         return ResponseEntity.ok(paymentService.listByUser(userId, pageable));
     }
 
+    @Transactional
     @PostMapping("/create-payment-intent")
     @Operation(summary = "Crear Payment Intent de Stripe")
     public ResponseEntity<Map<String, Object>> createPaymentIntent(
@@ -97,14 +99,14 @@ public class PaymentController {
             Invoice invoice = ownershipValidator.validateAndGet(request.getInvoiceId(), userId);
 
             if (invoice.getEstado() != EstadoFactura.PENDIENTE &&
-                invoice.getEstado() != EstadoFactura.VENCIDA) {
-                throw new BusinessException("La factura no puede ser pagada en estado: " + invoice.getEstado(), HttpStatus.BAD_REQUEST);
+                    invoice.getEstado() != EstadoFactura.VENCIDA) {
+                throw new BusinessException("La factura no puede ser pagada en estado: " + invoice.getEstado(),
+                        HttpStatus.BAD_REQUEST);
             }
 
             Map<String, Object> paymentIntent = stripeService.createPaymentIntent(
-                invoice.getMontoTotal(),
-                invoice.getId().toString()
-            );
+                    invoice.getMontoTotal(),
+                    invoice.getId().toString());
 
             return ResponseEntity.ok(paymentIntent);
         } catch (StripeException e) {
@@ -113,6 +115,7 @@ public class PaymentController {
         }
     }
 
+    @Transactional
     @PostMapping("/confirm-payment")
     @Operation(summary = "Confirmar pago de Stripe")
     public ResponseEntity<InvoiceResponse> confirmPayment(
