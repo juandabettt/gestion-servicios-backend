@@ -53,4 +53,6 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
 
     @Query("SELECT i FROM Invoice i WHERE i.property.id = :propertyId AND i.proveedor.id = :proveedorId AND i.deletedAt IS NULL ORDER BY i.fechaEmision DESC")
     List<Invoice> findHistorialByPropertyAndProveedor(@Param("propertyId") UUID propertyId, @Param("proveedorId") UUID proveedorId, Pageable pageable);
+
+    List<Invoice> findTop6ByPropertyIdOrderByFechaVencimientoDesc(UUID propertyId);
 }

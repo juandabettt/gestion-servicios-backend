@@ -8,7 +8,16 @@
       "Bash(git push *)",
       "Bash(mvnw clean *)",
       "PowerShell($mvn = \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\Maven\\\\apache-maven-3.9.16-bin\\\\apache-maven-3.9.16\\\\bin\\\\mvn.cmd\"; Set-Location \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\verificacion backend\\\\gestion-servicios-backend\"; & $mvn clean package -DskipTests 2>&1 | Select-Object -Last 60)",
-      "PowerShell($mvn = \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\Maven\\\\apache-maven-3.9.16-bin\\\\apache-maven-3.9.16\\\\bin\\\\mvn.cmd\"; Set-Location \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\verificacion backend\\\\gestion-servicios-backend\"; & $mvn clean package -DskipTests 2>&1 | Select-Object -Last 15)"
+      "PowerShell($mvn = \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\Maven\\\\apache-maven-3.9.16-bin\\\\apache-maven-3.9.16\\\\bin\\\\mvn.cmd\"; Set-Location \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\verificacion backend\\\\gestion-servicios-backend\"; & $mvn clean package -DskipTests 2>&1 | Select-Object -Last 15)",
+      "Bash(Get-Content \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\Ia backend\\\\gestion-servicios-backend\\\\code INSTANT_AI_ANALYSIS_BACKEND.md\")",
+      "Bash(Select-Object -Skip 100)",
+      "PowerShell($content = Get-Content \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\Ia backend\\\\gestion-servicios-backend\\\\code INSTANT_AI_ANALYSIS_BACKEND.md\" -Raw; Write-Output $content.Length; Write-Output $content)",
+      "PowerShell($path = \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\Ia backend\\\\gestion-servicios-backend\\\\code INSTANT_AI_ANALYSIS_BACKEND.md\"; [System.IO.File]::ReadAllText\\($path\\))",
+      "PowerShell(mvn *)",
+      "PowerShell(Get-Command *)",
+      "PowerShell(Test-Path *)",
+      "PowerShell(& \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\Maven\\\\apache-maven-3.9.16-bin\\\\bin\\\\mvn.cmd\" \"-f\" \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\Ia backend\\\\gestion-servicios-backend\\\\pom.xml\" clean package -DskipTests 2>&1 | Select-Object -Last 35)",
+      "PowerShell($mvn = \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\Maven\\\\apache-maven-3.9.16-bin\\\\apache-maven-3.9.16\\\\bin\\\\mvn.cmd\"; & $mvn \"-f\" \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\Ia backend\\\\gestion-servicios-backend\\\\pom.xml\" clean package -DskipTests 2>&1 | Select-Object -Last 40)"
     ]
   }
 }

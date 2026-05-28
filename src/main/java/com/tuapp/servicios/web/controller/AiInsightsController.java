@@ -31,6 +31,16 @@ public class AiInsightsController {
     private final AiInsightsService aiInsightsService;
     private final UserRepository userRepository;
 
+    @GetMapping("/instant-analysis")
+    @Operation(summary = "Análisis IA instantáneo en memoria (sin cola asíncrona)")
+    public ResponseEntity<AiAnalysisResponse> getInstantAnalysis(
+            @RequestParam UUID propertyId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UUID userId = resolveUserId(userDetails);
+        AiAnalysisResponse response = aiInsightsService.calculateInstantAnalysis(propertyId, userId);
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/analyze")
     @Operation(summary = "Solicitar análisis IA del historial de consumo (asíncrono)")
     public ResponseEntity<AiAnalyzeResponse> analyze(
