@@ -17,7 +17,9 @@
       "PowerShell(Get-Command *)",
       "PowerShell(Test-Path *)",
       "PowerShell(& \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\Maven\\\\apache-maven-3.9.16-bin\\\\bin\\\\mvn.cmd\" \"-f\" \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\Ia backend\\\\gestion-servicios-backend\\\\pom.xml\" clean package -DskipTests 2>&1 | Select-Object -Last 35)",
-      "PowerShell($mvn = \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\Maven\\\\apache-maven-3.9.16-bin\\\\apache-maven-3.9.16\\\\bin\\\\mvn.cmd\"; & $mvn \"-f\" \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\Ia backend\\\\gestion-servicios-backend\\\\pom.xml\" clean package -DskipTests 2>&1 | Select-Object -Last 40)"
+      "PowerShell($mvn = \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\Maven\\\\apache-maven-3.9.16-bin\\\\apache-maven-3.9.16\\\\bin\\\\mvn.cmd\"; & $mvn \"-f\" \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\Ia backend\\\\gestion-servicios-backend\\\\pom.xml\" clean package -DskipTests 2>&1 | Select-Object -Last 40)",
+      "PowerShell($env:PATH -split \";\" | Where-Object { $_ -match \"maven|mvn|java\" })",
+      "PowerShell($mvn = \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\Maven\\\\apache-maven-3.9.16-bin\\\\apache-maven-3.9.16\\\\bin\\\\mvn.cmd\"; cd \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\backend\\\\gestion-servicios-backend\"; & $mvn clean package -DskipTests 2>&1)"
     ]
   }
 }

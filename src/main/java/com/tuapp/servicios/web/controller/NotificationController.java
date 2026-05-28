@@ -59,6 +59,15 @@ public class NotificationController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/delete-read")
+    @Operation(summary = "Eliminar notificaciones leídas del usuario")
+    public ResponseEntity<Void> deleteReadNotifications(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UUID userId = resolveUserId(userDetails);
+        notificationService.eliminarLeidas(userId);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/preferences")
     @Operation(summary = "Obtener preferencias de notificación")
     public ResponseEntity<UserPreferencesResponse> getPreferences(

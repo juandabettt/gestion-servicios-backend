@@ -137,6 +137,11 @@ public class NotificationService {
     }
 
     @Transactional
+    public void eliminarLeidas(UUID userId) {
+        notificationRepository.deleteByUsuarioIdAndLeidaTrue(userId);
+    }
+
+    @Transactional
     public void marcarTodasLeidas(UUID userId) {
         notificationRepository.findByUsuarioIdAndLeidaFalse(userId)
             .forEach(n -> {
