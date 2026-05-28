@@ -3,6 +3,7 @@ package com.tuapp.servicios.web.controller;
 import com.tuapp.servicios.application.dto.request.AiFeedbackRequest;
 import com.tuapp.servicios.application.dto.response.AiAnalysisResponse;
 import com.tuapp.servicios.application.dto.response.AiAnalyzeResponse;
+import com.tuapp.servicios.application.exception.ResourceNotFoundException;
 import com.tuapp.servicios.application.service.AiInsightsService;
 import com.tuapp.servicios.domain.enums.TipoServicio;
 import io.swagger.v3.oas.annotations.Operation;
@@ -82,6 +83,9 @@ public class AiInsightsController {
     }
 
     private UUID resolveUserId(UserDetails userDetails) {
-        return userRepository.findByEmail(userDetails.getUsername()).orElseThrow().getId();
+        return userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Usuario no encontrado: " + userDetails.getUsername()))
+                .getId();
     }
 }
