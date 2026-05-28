@@ -70,6 +70,7 @@ public class AiAnalysisJobHandler {
 
         if (result.isExitoso()) {
             analysis.setDescripcion(result.getResumenEjecutivo());
+            analysis.setResultadoJson(objectMapper.writeValueAsString(result));
             analysis.setEstado(EstadoAnalisis.COMPLETADO);
             analysis.setTipoAnalisis(TipoAnalisis.RECOMENDACION);
 

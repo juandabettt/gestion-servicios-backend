@@ -49,4 +49,7 @@ public class AiAnalysis extends BaseAuditEntity {
 
     @Column(name = "calificacion_usuario")
     private Integer calificacionUsuario;
+
+    @Column(name = "resultado_json", columnDefinition = "TEXT")
+    private String resultadoJson;
 }
